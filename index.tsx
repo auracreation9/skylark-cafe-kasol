@@ -1560,7 +1560,7 @@ const AdminView = React.memo(({
 });
 
 // --- Login View ---
-const LoginView = React.memo(({ onLogin }: { onLogin: (type: 'kitchen' | 'admin') => void }) => {
+const LoginView = React.memo(({ onLogin, onBack }: { onLogin: (type: 'kitchen' | 'admin') => void, onBack: () => void }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
@@ -1585,6 +1585,9 @@ const LoginView = React.memo(({ onLogin }: { onLogin: (type: 'kitchen' | 'admin'
                 <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
             </div>
             <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md relative z-10 animate-fade-in">
+                <button onClick={onBack} className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                    <X className="w-5 h-5" />
+                </button>
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-black text-white mb-2">Skylark Login</h1>
                     <p className="text-gray-400">Access restricted dashboard</p>
@@ -1770,7 +1773,7 @@ const App = () => {
 
   return (
     <>
-        {view === 'login' && <LoginView onLogin={handleLoginSuccess} />}
+        {view === 'login' && <LoginView onLogin={handleLoginSuccess} onBack={() => setView('customer')} />}
         
         {view === 'customer' && (
             <CustomerView 
