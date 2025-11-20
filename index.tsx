@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
@@ -676,6 +675,161 @@ const ScrollToTop = () => {
     );
 };
 
+const StockControlModal = ({ isOpen, onClose, menu, onToggle }: { isOpen: boolean, onClose: () => void, menu: MenuItem[], onToggle: (id: string) => void }) => {
+    const [search, setSearch] = useState('');
+    if (!isOpen) return null;
+    
+    const filtered = menu.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white">Menu Stock Control</h2>
+                    <button onClick={onClose}><X className="text-gray-400" /></button>
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="Search Item..." 
+                    value={search} 
+                    onChange={e => setSearch(e.target.value)} 
+                    className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white mb-4" 
+                />
+                <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
+                    {filtered.map(item => (
+                        <div key={item.id} className="flex justify-between items-center p-3 bg-black/50 rounded-lg border border-white/5">
+                            <span className={!item.available ? 'text-gray-500 line-through' : 'text-white'}>{item.name}</span>
+                            <button 
+                                onClick={() => onToggle(item.id)}
+                                className={`px-4 py-2 rounded font-bold text-sm ${item.available ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}
+                            >
+                                {item.available ? 'In Stock' : 'Out of Stock'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const IngredientInventoryModal = ({ isOpen, onClose, ingredients, onToggle }: { isOpen: boolean, onClose: () => void, ingredients: Ingredient[], onToggle: (id: string) => void }) => {
+    const [search, setSearch] = useState('');
+    if (!isOpen) return null;
+
+    const filtered = ingredients.filter(i => i.name.toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white">Kitchen Ingredients</h2>
+                    <button onClick={onClose}><X className="text-gray-400" /></button>
+                </div>
+                 <input 
+                    type="text" 
+                    placeholder="Search Ingredient..." 
+                    value={search} 
+                    onChange={e => setSearch(e.target.value)} 
+                    className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white mb-4" 
+                />
+                <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
+                    {filtered.map(ing => (
+                        <div key={ing.id} className="flex justify-between items-center p-3 bg-black/50 rounded-lg border border-white/5">
+                            <div>
+                                <div className={!ing.inStock ? 'text-gray-500 line-through' : 'text-white'}>{ing.name}</div>
+                                <div className="text-xs text-gray-500">{ing.category}</div>
+                            </div>
+                            <button 
+                                onClick={() => onToggle(ing.id)}
+                                className={`px-4 py-2 rounded font-bold text-sm ${ing.inStock ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}
+                            >
+                                {ing.inStock ? 'Available' : 'Empty'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const InventoryManager = () => {
+    const [items] = useState<InventoryItem[]>([
+        { id: '1', name: 'Basmati Rice', quantity: 25, unit: 'kg', area: 'Kitchen', category: 'Grains', purchaseDate: '2023-10-01', cost: 1200, supplier: 'Local Mart', status: 'Good' },
+        { id: '2', name: 'Cooking Oil', quantity: 10, unit: 'L', area: 'Kitchen', category: 'Pantry', purchaseDate: '2023-10-05', cost: 1500, supplier: 'Wholesale', status: 'Good' },
+        { id: '3', name: 'Napkins', quantity: 500, unit: 'pcs', area: 'Open Area', category: 'Supplies', purchaseDate: '2023-09-20', cost: 300, supplier: 'Depot', status: 'Needs Replacement' }
+    ]);
+
+    return (
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white">Inventory Management</h2>
+            <div className="bg-zinc-900 rounded-xl border border-white/10 overflow-hidden">
+                <table className="w-full text-left text-gray-400">
+                    <thead className="bg-black text-gray-200">
+                        <tr>
+                            <th className="p-4">Item Name</th>
+                            <th className="p-4">Quantity</th>
+                            <th className="p-4">Area</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4">Last Purchase</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {items.map(item => (
+                            <tr key={item.id}>
+                                <td className="p-4 text-white">{item.name}</td>
+                                <td className="p-4">{item.quantity} {item.unit}</td>
+                                <td className="p-4">{item.area}</td>
+                                <td className="p-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${item.status === 'Good' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td className="p-4">{item.purchaseDate}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const CalendarPlanner = () => {
+    return (
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white">Shift & Event Calendar</h2>
+            <div className="bg-zinc-900 p-8 rounded-xl border border-white/10 text-center text-gray-500">
+                <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Calendar integration coming soon...</p>
+            </div>
+        </div>
+    );
+};
+
+const MenuEditorModal = ({ menu, onClose, onUpdate }: { menu: MenuItem[], onClose: () => void, onUpdate: (m: MenuItem) => void }) => {
+     return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                 <h2 className="text-2xl font-bold text-white">Menu Editor</h2>
+                 <button onClick={onClose} className="text-gray-400 hover:text-white">Close</button>
+            </div>
+            <div className="grid gap-4">
+                 {menu.map(item => (
+                     <div key={item.id} className="bg-zinc-900 p-4 rounded-lg border border-white/10 flex justify-between">
+                         <div>
+                             <h4 className="font-bold text-white">{item.name}</h4>
+                             <p className="text-sm text-gray-400">₹{item.price}</p>
+                         </div>
+                         <button className="text-cyan-400 text-sm">Edit</button>
+                     </div>
+                 ))}
+            </div>
+        </div>
+    );
+};
+
 const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity, onPlaceOrder, onNavigate, activeCategory, setActiveCategory }: any) => {
     const [sortBy, setSortBy] = useState<'price' | 'time'>('price');
     const [vegOnly, setVegOnly] = useState(false);
@@ -868,6 +1022,22 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
                         <button onClick={() => scrollToCategory('Stay')} className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold transition-all">Stay</button>
                         <button onClick={() => scrollToCategory('Maggi')} className="px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-full text-sm font-bold text-cyan-400 transition-all">Café Menu</button>
                     </div>
+                    {/* Search Bar */}
+                    <div className="flex-1 max-w-md mx-6 relative">
+                         <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
+                         <input 
+                            type="text" 
+                            placeholder="Search dishes..." 
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-zinc-900/50 border border-cyan-500/50 focus:border-cyan-400 rounded-xl pl-10 pr-8 py-2 text-sm text-white placeholder-gray-500 focus:outline-none transition-all backdrop-blur-md"
+                         />
+                         {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-2.5 text-gray-500 hover:text-white">
+                                <X size={16} />
+                            </button>
+                         )}
+                    </div>
                     <div className="flex gap-3">
                          <a href="https://maps.app.goo.gl/NUpz4bEUTTagFVUn9" target="_blank" rel="noreferrer" className="p-3 bg-zinc-900 rounded-full hover:scale-110 transition-all border border-white/10 group">
                             <MapPin size={20} className="text-cyan-400 group-hover:text-cyan-300" />
@@ -881,7 +1051,36 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
                     </div>
                 </div>
 
+                {/* Mobile Search Bar Sticky */}
+                <div className="md:hidden sticky top-0 z-20 p-4 bg-black/80 backdrop-blur-md border-b border-white/5">
+                     <div className="relative">
+                         <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
+                         <input 
+                            type="text" 
+                            placeholder="Search dishes..." 
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-zinc-900 border border-cyan-500/50 rounded-xl pl-10 pr-8 py-2 text-sm text-white placeholder-gray-500 focus:outline-none"
+                         />
+                         {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-2.5 text-gray-500 hover:text-white">
+                                <X size={16} />
+                            </button>
+                         )}
+                    </div>
+                </div>
+
+
                 <div className="p-4 pb-32 space-y-8">
+                     {/* Empty State for Search */}
+                     {Object.keys(sortedMenu).length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                            <Search size={48} className="mb-4 opacity-50" />
+                            <p className="text-lg font-medium">No dishes found matching "{searchTerm}"</p>
+                            <button onClick={() => setSearchTerm('')} className="mt-4 text-cyan-400 hover:underline">Clear Search</button>
+                        </div>
+                     )}
+
                     {Object.entries(sortedMenu).map(([category, items]) => (
                         <div key={category} id={`cat-${category}`} className="scroll-mt-6">
                             <h2 className={`text-xl md:text-2xl font-black mb-4 md:mb-6 uppercase tracking-tighter flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 transition-all duration-500 ${activeCategory === category ? 'scale-105 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]' : ''}`}>
@@ -1022,7 +1221,7 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                 <div className="space-y-2 mb-4">
                                     {order.items.map((item, idx) => {
                                         // Check for missing ingredients for this item
-                                        const liveItem = menu.find((m: MenuItem) => m.id === item.id);
+                                        const liveItem = (menu as MenuItem[]).find((m: MenuItem) => m.id === item.id);
                                         const hasMissing = liveItem && liveItem.missingIngredients && liveItem.missingIngredients.length > 0;
                                         
                                         return (
@@ -1033,7 +1232,7 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                                         <span className={`text-sm ${item.isVeg ? 'text-green-300' : 'text-red-300'}`}>{item.name}</span>
                                                         {hasMissing && (
                                                             <p className="text-[10px] text-red-400 font-bold flex items-center gap-1">
-                                                                <AlertCircle size={10} /> Missing: {liveItem.missingIngredients?.map(mid => ingredients.find((i: Ingredient) => i.id === mid)?.name).join(', ')}
+                                                                <AlertCircle size={10} /> Missing: {liveItem?.missingIngredients?.map((mid: string) => ingredients.find((i: Ingredient) => i.id === mid)?.name).join(', ')}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1145,6 +1344,16 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
             Description: m.description
         }));
         generateCSV(data, 'skylark_menu_export.csv');
+    };
+
+    const handleExportPriceList = () => {
+        const data = menu.map((m: MenuItem) => ({
+            'Item Name': m.name,
+            'Category': m.category,
+            'Current Price': m.price,
+            'Description': m.description
+        }));
+        generateCSV(data, 'skylark-menu-prices.csv');
     };
 
     const handleUploadMenu = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1352,6 +1561,9 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
                     <button onClick={handleDownloadMenu} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-gray-300 transition-all flex items-center gap-2">
                         <Download size={14} /> Export Menu
                     </button>
+                    <button onClick={handleExportPriceList} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-gray-300 transition-all flex items-center gap-2">
+                        <FileSpreadsheet size={14} /> Export Prices CSV
+                    </button>
                     <button onClick={onLogout} className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
                         <LogOut size={14} /> Logout
                     </button>
@@ -1364,208 +1576,33 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
     );
 });
 
-const IngredientInventoryModal = ({ isOpen, onClose, ingredients, onToggle }: any) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'All' | 'Dairy' | 'Vegetable' | 'Protein' | 'Grain'>('All');
-
-    if(!isOpen) return null;
-
-    const filtered = ingredients.filter((i: Ingredient) => 
-        (activeTab === 'All' || i.category === activeTab) &&
-        i.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Package className="text-blue-400" /> Ingredient Inventory</h2>
-                    <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
-                </div>
-                <div className="p-4 border-b border-white/10 flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-2.5 text-gray-500" size={18} />
-                        <input 
-                            type="text" 
-                            placeholder="Search ingredients..." 
-                            value={searchTerm} 
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full bg-black border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white focus:border-blue-500 focus:outline-none" 
-                        />
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-                        {['All', 'Dairy', 'Vegetable', 'Protein', 'Grain'].map(tab => (
-                            <button 
-                                key={tab} 
-                                onClick={() => setActiveTab(tab as any)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-blue-500 text-black' : 'bg-zinc-800 text-gray-400'}`}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filtered.map((ing: Ingredient) => (
-                            <div key={ing.id} className={`p-4 rounded-xl border flex justify-between items-center transition-all ${ing.inStock ? 'bg-zinc-800/50 border-white/5' : 'bg-red-500/10 border-red-500/30'}`}>
-                                <div>
-                                    <p className={`font-bold ${ing.inStock ? 'text-white' : 'text-red-400'}`}>{ing.name}</p>
-                                    <p className="text-xs text-gray-500">{ing.category} • {ing.unit}</p>
-                                </div>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onToggle(ing.id); }}
-                                    className={`relative w-12 h-6 rounded-full transition-colors ${ing.inStock ? 'bg-green-500' : 'bg-zinc-700'}`}
-                                >
-                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${ing.inStock ? 'translate-x-6' : 'translate-x-0'}`} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const StockControlModal = ({ isOpen, onClose, menu, onToggle }: any) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    if(!isOpen) return null;
-
-    const filtered = menu.filter((m: MenuItem) => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-2"><List className="text-purple-400" /> Menu Stock Control</h2>
-                    <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
-                </div>
-                <div className="p-4 border-b border-white/10">
-                     <input 
-                        type="text" 
-                        placeholder="Search menu items..." 
-                        value={searchTerm} 
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none" 
-                    />
-                </div>
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filtered.map((item: MenuItem) => (
-                            <div key={item.id} className={`p-4 rounded-xl border flex justify-between items-center transition-all ${item.available ? 'bg-zinc-800/50 border-white/5' : 'bg-red-500/10 border-red-500/30'}`}>
-                                <div>
-                                    <p className={`font-bold ${item.available ? 'text-white' : 'text-red-400'}`}>{item.name}</p>
-                                    <p className="text-xs text-gray-500">{item.category}</p>
-                                </div>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); onToggle(item.id); }}
-                                    className={`relative w-12 h-6 rounded-full transition-colors ${item.available ? 'bg-green-500' : 'bg-zinc-700'}`}
-                                >
-                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${item.available ? 'translate-x-6' : 'translate-x-0'}`} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// --- Stub Components for Inventory/Calendar to maintain full app logic ---
-
-const InventoryManager = () => {
-    const [activeTab, setActiveTab] = useState<'Rooms' | 'Kitchen' | 'Open Area'>('Rooms');
-    // Mock data
-    const items: InventoryItem[] = [
-        { id: '1', name: 'Towels', quantity: 50, unit: 'pcs', area: 'Rooms', category: 'Linen', purchaseDate: '2024-01-01', cost: 5000, supplier: 'ABC Textiles', status: 'Good' },
-        { id: '2', name: 'Soap Dispensers', quantity: 10, unit: 'pcs', area: 'Rooms', category: 'Bathroom', purchaseDate: '2024-01-05', cost: 2000, supplier: 'CleanCo', status: 'Needs Replacement' },
-        { id: '3', name: 'Frying Pan', quantity: 5, unit: 'pcs', area: 'Kitchen', category: 'Cookware', purchaseDate: '2023-12-01', cost: 8000, supplier: 'ChefSupplies', status: 'Good' },
-    ];
-
-    const handleImportCSV = () => { alert('CSV Import functionality'); };
-
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Inventory Management</h2>
-                <button onClick={handleImportCSV} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-white flex items-center gap-2"><FileSpreadsheet size={16}/> Import CSV</button>
-            </div>
-            <div className="flex gap-2 mb-6">
-                {['Rooms', 'Kitchen', 'Open Area'].map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-6 py-2 rounded-lg font-bold ${activeTab === tab ? 'bg-blue-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>{tab}</button>
-                ))}
-            </div>
-            <div className="bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
-                 <table className="w-full text-left text-sm text-gray-400">
-                    <thead className="bg-black text-gray-200 font-medium uppercase">
-                        <tr>
-                            <th className="p-4">Item Name</th>
-                            <th className="p-4">Quantity</th>
-                            <th className="p-4">Status</th>
-                            <th className="p-4">Supplier</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {items.filter(i => i.area === activeTab).map(item => (
-                            <tr key={item.id}>
-                                <td className="p-4 text-white font-bold">{item.name}</td>
-                                <td className="p-4">{item.quantity} {item.unit}</td>
-                                <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${item.status === 'Good' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{item.status}</span></td>
-                                <td className="p-4">{item.supplier}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-const CalendarPlanner = () => {
-    return (
-        <div className="space-y-6">
-             <h2 className="text-2xl font-bold text-white">Calendar Planner</h2>
-             <div className="bg-zinc-900 p-8 rounded-xl border border-white/5 text-center text-gray-500">
-                 <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                 <p>Full calendar implementation coming soon.</p>
-             </div>
-        </div>
-    );
-};
-
-const MenuEditorModal = ({ menu, onClose }: any) => (
-    <div className="bg-zinc-900 p-6 rounded-xl border border-white/10">
-        <h2 className="text-xl font-bold text-white mb-4">Edit Menu</h2>
-        <p className="text-gray-400">Feature coming soon.</p>
-        <button onClick={onClose} className="mt-4 px-4 py-2 bg-zinc-800 text-white rounded">Close</button>
-    </div>
-);
-
-const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => {
+const PrintableMenu = React.memo(({ menu }: { menu: MenuItem[] }) => {
     const grouped = useMemo(() => {
         const g: {[key: string]: MenuItem[]} = {};
-        menu.forEach(i => {
-            if(!g[i.category]) g[i.category] = [];
-            g[i.category].push(i);
+        menu.forEach(item => {
+            if (item.available) {
+                if (!g[item.category]) g[item.category] = [];
+                g[item.category].push(item);
+            }
         });
         return g;
     }, [menu]);
 
     return (
-        <div className="p-8 bg-white text-black min-h-screen font-serif">
-            <h1 className="text-4xl font-bold text-center mb-2 uppercase tracking-widest">Skylark Café</h1>
-            <p className="text-center text-sm text-gray-500 mb-8 uppercase tracking-widest">Kasol | Himachal Pradesh</p>
-            <div className="columns-2 md:columns-3 gap-8 space-y-8">
+        <div className="min-h-screen bg-black text-white p-8 print:p-0 print:bg-white print:text-black">
+            <div className="text-center mb-8 print:mb-4 border-b border-white/20 pb-4">
+                <h1 className="text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 print:text-black">Skylark Café</h1>
+                <p className="text-sm tracking-[0.5em] text-gray-400 uppercase">Kasol | Himachal Pradesh</p>
+            </div>
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8 print:columns-2">
                 {Object.entries(grouped).map(([cat, items]) => (
                     <div key={cat} className="break-inside-avoid mb-6">
-                        <h2 className="text-lg font-bold border-b-2 border-black mb-3 uppercase">{cat}</h2>
-                        <ul className="space-y-1">
-                            {items.map(i => (
-                                <li key={i.id} className="flex justify-between text-sm">
-                                    <span>{i.name}</span>
-                                    <span className="font-bold">₹{i.price}</span>
+                        <h3 className="text-xl font-bold mb-3 border-b border-dashed border-white/20 pb-1 text-cyan-400 print:text-black print:border-black">{cat}</h3>
+                        <ul className="space-y-2">
+                            {(items as MenuItem[]).map(item => (
+                                <li key={item.id} className="flex justify-between text-sm group">
+                                    <span className={`${item.isVeg ? 'text-green-400 print:text-black' : 'text-red-400 print:text-black'} font-medium`}>{item.name}</span>
+                                    <span className="font-mono font-bold opacity-75">₹{item.price}</span>
                                 </li>
                             ))}
                         </ul>
@@ -1574,134 +1611,78 @@ const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => {
             </div>
         </div>
     );
-};
-
-const Toast = ({ message, onClose }: { message: string, onClose: () => void }) => {
-    useEffect(() => {
-        const timer = setTimeout(onClose, 3000);
-        return () => clearTimeout(timer);
-    }, [onClose]);
-
-    return (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 animate-fade-in">
-            <CheckCircle size={20} className="text-green-500" />
-            <span className="font-medium">{message}</span>
-        </div>
-    );
-};
-
-// --- Main App Component ---
+});
 
 const App = () => {
-    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'printable' | 'login'>('customer');
+    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'login' | 'printable' | 'order-confirmation'>('customer');
+    const [activeCategory, setActiveCategory] = useState('Stay');
     const [menu, setMenu] = useState<MenuItem[]>(buildMenu());
     const [cart, setCart] = useState<CartItem[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
+    const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
     const [ingredients, setIngredients] = useState<Ingredient[]>(MASTER_INGREDIENTS);
-    const [activeCategory, setActiveCategory] = useState('Maggi');
     const [authTarget, setAuthTarget] = useState<'kitchen' | 'admin' | null>(null);
-    const [toastMsg, setToastMsg] = useState('');
-    
-    // Order Flow State
-    const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
-    const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
-    const [currentOrderTime, setCurrentOrderTime] = useState(0);
-    const [currentOrderStatus, setCurrentOrderStatus] = useState<Order['status']>('pending');
-
-    // Persistent Auth
-    useEffect(() => {
-        const savedAuth = localStorage.getItem('skylark_auth');
-        if (savedAuth) {
-            const { type } = JSON.parse(savedAuth);
-            // Auto-redirect if on customer view initially? 
-            // Or just keep session valid. Let's just store it.
-        }
-    }, []);
+    const [showPlaceOrderModal, setShowPlaceOrderModal] = useState(false);
+    const [toast, setToast] = useState<string | null>(null);
 
     // Exit Confirmation
     useEffect(() => {
-      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        e.preventDefault();
-        e.returnValue = ''; 
-        return ''; 
-      };
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, []);
 
-    // Ingredient Logic
+    // Persist Orders
     useEffect(() => {
-        const newMenu = menu.map(item => {
-            const missing = item.requiredIngredients.filter(ingId => {
-                const ing = ingredients.find(i => i.id === ingId);
-                return ing && !ing.inStock;
-            });
-            return { ...item, available: missing.length === 0, missingIngredients: missing };
-        });
-        // Only update if changed to prevent loops
-        if(JSON.stringify(newMenu) !== JSON.stringify(menu)) {
-            setMenu(newMenu);
+        const savedOrders = localStorage.getItem('skylark_orders');
+        if (savedOrders) {
+            try {
+                const parsed = JSON.parse(savedOrders);
+                // Restore Date objects
+                parsed.forEach((o: any) => o.timestamp = new Date(o.timestamp));
+                setOrders(parsed);
+            } catch (e) { console.error("Failed to load orders", e); }
         }
-    }, [ingredients]);
+    }, []);
 
-    const handleAddToCart = (item: MenuItem) => {
-        setCart(prev => {
-            const existing = prev.find(i => i.id === item.id);
-            if (existing) return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-            return [...prev, { ...item, quantity: 1 }];
-        });
-        setToastMsg(`Added ${item.name} to cart`);
-    };
+    useEffect(() => {
+        localStorage.setItem('skylark_orders', JSON.stringify(orders));
+    }, [orders]);
 
-    const handleUpdateCartQuantity = (itemId: string, delta: number) => {
-        setCart(prev => prev.map(i => i.id === itemId ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
-    };
+    // Auth Persistence
+    useEffect(() => {
+        const auth = localStorage.getItem('skylark_auth');
+        if (auth) {
+            try {
+                const { type } = JSON.parse(auth);
+                if (type === 'kitchen' || type === 'admin') {
+                    // Just verify it exists, don't auto-switch unless on root load logic
+                }
+            } catch(e) {}
+        }
+    }, []);
 
-    const handlePlaceOrder = (info: CustomerInfo) => {
-        const newOrder: Order = {
-            id: Date.now().toString(),
-            items: cart,
-            total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
-            status: 'pending',
-            timestamp: new Date(),
-            customerInfo: info,
-            estimatedTime: 25 // dynamic calc could be added
-        };
-        setOrders(prev => [...prev, newOrder]);
-        setCart([]);
-        setCurrentOrderId(newOrder.id);
-        setCurrentOrderStatus('pending');
-        setCurrentOrderTime(newOrder.estimatedTime || 25);
-    };
-
-    const updateOrderStatus = (id: string, status: Order['status']) => {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-        if(currentOrderId === id) setCurrentOrderStatus(status);
-    };
-
-    const updateStockStatus = (itemId: string) => {
-        setMenu(prev => prev.map(i => i.id === itemId ? { ...i, available: !i.available } : i));
-    };
-
-    const updateIngredientStatus = (ingId: string) => {
-        setIngredients(prev => prev.map(i => i.id === ingId ? { ...i, inStock: !i.inStock } : i));
-    };
-
-    const handleNavigate = (target: 'kitchen' | 'admin') => {
-        const savedAuth = localStorage.getItem('skylark_auth');
-        if (savedAuth) {
-            const { type } = JSON.parse(savedAuth);
-            if (type === target) {
-                setView(target);
-                return;
+    useEffect(() => {
+        const auth = localStorage.getItem('skylark_auth');
+        if (auth) {
+            try {
+                const { type } = JSON.parse(auth);
+                if (type === 'kitchen' || type === 'admin') {
+                   setView(type);
+                }
+            } catch (e) {
+                console.error("Invalid auth token", e);
+                localStorage.removeItem('skylark_auth');
             }
         }
-        setAuthTarget(target);
-        setView('login');
-    };
+    }, []);
 
-    const handleLogin = (type: 'kitchen' | 'admin', remember: boolean) => {
-        if (remember) {
+    const handleLogin = (type: 'kitchen' | 'admin', save: boolean) => {
+        if (save) {
             localStorage.setItem('skylark_auth', JSON.stringify({ type, timestamp: Date.now() }));
         }
         setView(type);
@@ -1712,50 +1693,150 @@ const App = () => {
         setView('customer');
     };
 
+    const checkAuthAndNavigate = (target: 'kitchen' | 'admin') => {
+        const auth = localStorage.getItem('skylark_auth');
+        if (auth) {
+            try {
+                 const { type } = JSON.parse(auth);
+                 if (type === target) {
+                     setView(target);
+                     return;
+                 }
+            } catch (e) { localStorage.removeItem('skylark_auth'); }
+        }
+        setAuthTarget(target);
+        setView('login');
+    };
+
+    const addToCart = (item: MenuItem) => {
+        setCart(prev => {
+            const existing = prev.find(i => i.id === item.id);
+            if (existing) {
+                return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+            return [...prev, { ...item, quantity: 1 }];
+        });
+        showToast(`Added ${item.name} to cart`);
+    };
+
+    const updateCartQuantity = (id: string, delta: number) => {
+        setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
+    };
+
+    const placeOrder = (customerInfo: CustomerInfo) => {
+        // Calculate Estimated Time
+        let maxTime = 0;
+        let penalty = 0;
+        cart.forEach(item => {
+            if (item.prepTime > maxTime) maxTime = item.prepTime;
+            if (!item.isVeg) penalty = 5;
+        });
+        const estimatedTime = maxTime + penalty + 5; // +5 buffer
+
+        const newOrder: Order = {
+            id: Date.now().toString(),
+            items: [...cart],
+            total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
+            status: 'pending',
+            timestamp: new Date(),
+            customerInfo: customerInfo,
+            estimatedTime
+        };
+        setOrders(prev => [newOrder, ...prev]);
+        setCart([]);
+        setCurrentOrder(newOrder);
+        setView('order-confirmation');
+    };
+
+    const updateOrderStatus = (id: string, status: Order['status']) => {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+        if (currentOrder && currentOrder.id === id) {
+            setCurrentOrder(prev => prev ? { ...prev, status } : null);
+        }
+    };
+
+    const toggleStock = (id: string) => {
+        setMenu(prev => prev.map(i => i.id === id ? { ...i, available: !i.available } : i));
+    };
+
+    const toggleIngredient = (id: string) => {
+        setIngredients(prev => {
+            const newIngredients = prev.map(i => i.id === id ? { ...i, inStock: !i.inStock } : i);
+            
+            // Auto-update menu availability based on recipe
+            const unavailableIngIds = newIngredients.filter(i => !i.inStock).map(i => i.id);
+            setMenu(currentMenu => currentMenu.map(mItem => {
+                 const missing = mItem.requiredIngredients.filter(reqId => unavailableIngIds.includes(reqId));
+                 return { ...mItem, missingIngredients: missing };
+            }));
+
+            return newIngredients;
+        });
+    };
+    
+    const showToast = (msg: string) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 2000);
+    };
+
     return (
-        <>
-            <style>{`
+        <div className="font-sans bg-black text-white">
+             {/* Custom Scrollbar Styles */}
+             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.4); }
+                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
             `}</style>
 
-            {view === 'customer' && !currentOrderId && (
-                <CustomerView 
-                    menu={menu} 
-                    cart={cart} 
-                    onAddToCart={handleAddToCart} 
-                    onUpdateCartQuantity={handleUpdateCartQuantity} 
-                    onPlaceOrder={() => setIsPlaceOrderOpen(true)}
-                    onNavigate={handleNavigate}
-                    activeCategory={activeCategory}
-                    setActiveCategory={setActiveCategory}
-                />
+             {/* Toast Notification */}
+             {toast && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500/90 text-white px-6 py-3 rounded-full shadow-2xl z-[100] animate-fade-in flex items-center gap-2 backdrop-blur-sm">
+                    <CheckCircle size={18} /> {toast}
+                </div>
             )}
 
-            {view === 'customer' && currentOrderId && (
-                <OrderConfirmation 
-                    orderId={currentOrderId} 
-                    estimatedTime={currentOrderTime} 
-                    status={currentOrderStatus} 
-                    onBack={() => setCurrentOrderId(null)} 
-                />
+            {view === 'login' && <LoginView onLogin={(type, save) => { handleLogin(type, save); }} onBack={() => setView('customer')} />}
+            
+            {view === 'customer' && (
+                <>
+                    <CustomerView 
+                        menu={menu} 
+                        cart={cart} 
+                        onAddToCart={addToCart} 
+                        onUpdateCartQuantity={updateCartQuantity} 
+                        onPlaceOrder={() => setShowPlaceOrderModal(true)}
+                        onNavigate={checkAuthAndNavigate}
+                        activeCategory={activeCategory}
+                        setActiveCategory={setActiveCategory}
+                    />
+                    <PlaceOrderModal 
+                        isOpen={showPlaceOrderModal} 
+                        onClose={() => setShowPlaceOrderModal(false)} 
+                        onSubmit={placeOrder} 
+                    />
+                </>
             )}
 
-            {view === 'login' && (
-                <LoginView onLogin={handleLogin} onBack={() => setView('customer')} />
+            {view === 'order-confirmation' && currentOrder && (
+                <div className="h-screen bg-black">
+                    <OrderConfirmation 
+                        orderId={currentOrder.id} 
+                        estimatedTime={currentOrder.estimatedTime || 20} 
+                        status={currentOrder.status} 
+                        onBack={() => setView('customer')} 
+                    />
+                </div>
             )}
 
             {view === 'kitchen' && (
                 <KitchenView 
                     orders={orders} 
-                    menu={menu} 
-                    ingredients={ingredients} 
-                    missingIngredients={[]}
+                    menu={menu}
                     updateOrderStatus={updateOrderStatus} 
-                    updateStockStatus={updateStockStatus} 
-                    updateIngredientStatus={updateIngredientStatus}
+                    updateStockStatus={toggleStock} 
+                    ingredients={ingredients}
+                    updateIngredientStatus={toggleIngredient}
                     onLogout={handleLogout}
                 />
             )}
@@ -1763,23 +1844,15 @@ const App = () => {
             {view === 'admin' && (
                 <AdminView 
                     orders={orders} 
-                    menu={menu} 
-                    setMenu={setMenu}
+                    menu={menu}
                     updateOrderStatus={updateOrderStatus} 
                     onLogout={handleLogout}
+                    setMenu={setMenu}
                 />
             )}
-
-            {view === 'printable' && <PrintableMenu menu={menu} />}
-
-            <PlaceOrderModal 
-                isOpen={isPlaceOrderOpen} 
-                onClose={() => setIsPlaceOrderOpen(false)} 
-                onSubmit={handlePlaceOrder} 
-            />
             
-            {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
-        </>
+            {view === 'printable' && <PrintableMenu menu={menu} />}
+        </div>
     );
 };
 
