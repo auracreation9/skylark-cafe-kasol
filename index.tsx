@@ -54,7 +54,8 @@ import {
 
 // --- Types ---
 
-type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)' | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
+type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 167
+  | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
 
 interface Ingredient {
   id: string;
@@ -164,25 +165,25 @@ const getIngIds = (names: string[]): string[] => {
 }
 
 const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] } = {
+  'Beverages (Hot)': [
+    ['Masala Chai', 50, '5 mins', 'Spiced Indian tea'],
+    ['Hot Coffee', 80, '5 mins', 'Steaming hot cappuccino']
+  ],
   'Breakfast': [
-    ['Butter Toast', 80, '10 mins', 'Crispy toast served with generous butter'],
-    ['Nutella Sandwich', 160, '10 mins', 'Loaded with creamy Nutella spread'],
+    ['Butter Toast', 90, '10 mins', 'Crispy toast served with generous butter'],    ['Nutella Sandwich', 160, '10 mins', 'Loaded with creamy Nutella spread'],
     ['Cheese Toast', 120, '10 mins', 'Topped with melted mozzarella cheese'],
-    ['Aloo Paratha', 100, '15 mins', 'Stuffed with spiced mashed potatoes'],
-    ['Mix Veg Paratha', 120, '15 mins', 'Stuffed with mixed vegetables'],
-    ['Paneer Paratha', 140, '15 mins', 'Stuffed with fresh spiced paneer'],
-    ['Gobhi Paratha', 120, '15 mins', 'Stuffed with spiced cauliflower'],
-    ['Pizza Paratha', 160, '20 mins', 'Fusion paratha with pizza fillings'],
-    ['Butter Roti', 30, '5 mins', 'Soft wheat flatbread with butter'],
-    ['Plain Roti', 20, '5 mins', 'Traditional soft wheat flatbread']
-  ],
-  'Maggi': [
-    ['Plain Maggi', 80, '10 mins', 'Classic comfort food'],
-    ['Cheese Maggi', 120, '10 mins', 'Loaded with grated cheese'],
-    ['Vegetable Maggi', 100, '15 mins', 'Cooked with fresh garden veggies'],
+    ['Aloo Paratha', 180, '15 mins', 'Stuffed with spiced mashed potatoes'],    ['Mix Veg Paratha', 120, '15 mins', 'Stuffed with mixed vegetables'],
+    ['Mix Veg Paratha', 200, '15 mins', 'Stuffed with mixed vegetables'],
+    ['Paneer Paratha', 220, '15 mins', 'Stuffed with fresh spiced paneer'],
+    ['Gobhi Paratha', 180, '15 mins', 'Stuffed with spiced cauliflower'],
+    ['Pizza Paratha', 280, '20 mins', 'Fusion paratha with pizza fillings'],
+    ['Butter Roti', 50, '10 mins', 'Soft wheat flatbread with butter'],
+    ['Plain Roti', 40, '10 mins', 'Traditional soft wheat flatbread']  'Maggi': [
+    ['Plain Maggi', 90, '10 mins', 'Classic comfort food'],
+    ['Cheese Maggi', 140, '10 mins', 'Loaded with grated cheese'],
+    ['Vegetable Maggi', 120, '15 mins', 'Cooked with fresh garden veggies'],
     ['Egg Maggi', 140, '15 mins', 'Classic Maggi with scrambled eggs'],
-    ['Chicken Maggi', 200, '20 mins', 'Maggi with tender chicken chunks']
-  ],
+    ['Chicken Maggi', 200, '20 mins', 'Maggi with tender chicken chunks']  ],
   'Salad': [
     ['Mix Veg Salad', 100, '10 mins', 'Fresh seasonal vegetables'],
     ['Onion Salad', 60, '5 mins', 'Sliced onions with lemon and spices'],
@@ -261,10 +262,6 @@ const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] 
     ['Fresh Lime Soda', 160, '5 mins', 'Classic lemon soda'],
     ['Coconut Water', 120, '5 mins', 'Fresh tender coconut water'],
     ['Cold Coffee', 240, '10 mins', 'Chilled creamy coffee']
-  ],
-  'Beverages (Hot)': [
-      ['Hot Coffee', 160, '10 mins', 'Steaming hot cappuccino'],
-      ['Masala Chai', 80, '10 mins', 'Spiced Indian tea']
   ],
   'Shakes/Lassi': [
     ['Banana Shake', 200, '10 mins', 'Creamy fresh banana shake'],
