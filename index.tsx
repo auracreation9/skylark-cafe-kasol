@@ -100,8 +100,7 @@ interface Order {
   customerInfo: CustomerInfo;
   estimatedTime?: number; // minutes
 }
-
-interface InventoryItem {
+181interface InventoryItem {
     id: string;
     name: string;
     quantity: number;
@@ -178,7 +177,8 @@ const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] 
     ['Gobhi Paratha', 180, '15 mins', 'Stuffed with spiced cauliflower'],
     ['Pizza Paratha', 280, '20 mins', 'Fusion paratha with pizza fillings'],
     ['Butter Roti', 50, '10 mins', 'Soft wheat flatbread with butter'],
-    ['Plain Roti', 40, '10 mins', 'Traditional soft wheat flatbread']  'Maggi': [
+    ['Plain Roti', 40, '10 mins', 'Traditional soft wheat flatbread'] ,
+    'Maggi': [
     ['Plain Maggi', 90, '10 mins', 'Classic comfort food'],
     ['Cheese Maggi', 140, '10 mins', 'Loaded with grated cheese'],
     ['Vegetable Maggi', 120, '15 mins', 'Cooked with fresh garden veggies'],
