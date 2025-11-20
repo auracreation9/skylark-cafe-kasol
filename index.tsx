@@ -840,7 +840,7 @@ const CustomerView = React.memo(({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between shrink-0">
+        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/5 p-3 md:p-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
                 <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-gray-400 hover:text-white">
                     <AlignLeft size={24} />
@@ -861,18 +861,18 @@ const CustomerView = React.memo(({
             </div>
 
             <div className="flex items-center gap-3">
-                <button onClick={() => window.open('https://maps.app.goo.gl/NUpz4bEUTTagFVUn9', '_blank')} className="w-10 h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/50 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all hover:scale-105">
+                <button onClick={() => window.open('https://maps.app.goo.gl/NUpz4bEUTTagFVUn9', '_blank')} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/50 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all hover:scale-105">
                     <MapPin size={20} />
                 </button>
                  <button 
                     onClick={() => onLogin('chef')}
-                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-orange-500/20 border border-white/5 hover:border-orange-500/50 flex items-center justify-center text-gray-400 hover:text-orange-400 transition-all hover:scale-105"
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-orange-500/20 border border-white/5 hover:border-orange-500/50 flex items-center justify-center text-gray-400 hover:text-orange-400 transition-all hover:scale-105"
                 >
                     <ChefHat size={20} />
                 </button>
                 <button 
                     onClick={() => onLogin('admin')}
-                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/50 flex items-center justify-center text-gray-400 hover:text-purple-400 transition-all hover:scale-105"
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/50 flex items-center justify-center text-gray-400 hover:text-purple-400 transition-all hover:scale-105"
                 >
                     <User size={20} />
                 </button>
@@ -881,12 +881,12 @@ const CustomerView = React.memo(({
 
                 <button 
                   onClick={() => setIsCartOpen(true)}
-                  className="relative group flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 pl-3 pr-4 py-2 rounded-full hover:scale-105 transition-all shadow-lg shadow-cyan-500/20"
+                  className="relative group flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 pl-2 pr-3 py-1.5 md:pl-3 md:pr-4 md:py-2 rounded-full hover:scale-105 transition-all shadow-lg shadow-cyan-500/20"
                 >
                    <div className="relative">
                        <ShoppingBag size={20} className="text-white" />
                        {totalItems > 0 && (
-                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-black">
+                        <span className="absolute -top-2 -right-2 w-4 h-4 md:w-5 md:h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-black">
                             {totalItems}
                         </span>
                        )}
@@ -908,8 +908,8 @@ const CustomerView = React.memo(({
                     const isActive = activeCategory === cat;
 
                     return (
-                        <section key={cat} id={`cat-${cat}`} className="mb-12 scroll-mt-24">
-                           <div className="flex items-center gap-4 mb-6">
+                        <section key={cat} id={`cat-${cat}`} className="mb-8 md:mb-12 scroll-mt-24">
+                           <div className="flex items-center gap-4 mb-4 md:mb-6">
                                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white shadow-lg" style={{ color: color, boxShadow: isActive ? `0 0 20px ${color}30` : 'none' }}>
                                    {getCategoryIcon(cat)}
                                </div>
@@ -917,12 +917,12 @@ const CustomerView = React.memo(({
                                <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent"></div>
                            </div>
 
-                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                                {items.map(item => (
-                                   <div key={item.id} className={`group relative bg-transparent border border-white/10 rounded-2xl p-4 hover:border-[${color}]/50 hover:shadow-[0_0_30px_${color}20] hover:scale-[1.02] transition-all duration-200 overflow-hidden h-40 sm:h-44 flex flex-col`} style={{ borderColor: isActive ? `${color}40` : '' }}>
+                                   <div key={item.id} className={`group relative bg-transparent border border-white/10 rounded-2xl p-3 md:p-4 hover:border-[${color}]/50 hover:shadow-[0_0_30px_${color}20] hover:scale-[1.02] transition-all duration-200 overflow-hidden min-h-[140px] md:h-44 flex flex-col`} style={{ borderColor: isActive ? `${color}40` : '' }}>
                                        
                                        {/* Neon Pop-up Art */}
-                                       <div className="absolute -right-6 -bottom-6 text-white/5 group-hover:text-white/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 z-0" style={{ color: `${color}10` }}>
+                                       <div className="absolute -right-4 -bottom-4 text-white/5 group-hover:text-white/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 z-0" style={{ color: `${color}10` }}>
                                            {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: 120 })}
                                        </div>
                                        
@@ -942,14 +942,14 @@ const CustomerView = React.memo(({
                                        </div>
 
                                        <div className="relative z-10 flex-1">
-                                           <h3 className={`font-bold text-lg leading-tight mb-1 group-hover:text-[${color}] transition-colors`} style={{ color: isActive ? color : 'white' }}>{item.name}</h3>
+                                           <h3 className={`font-bold text-base md:text-lg leading-tight mb-1 group-hover:text-[${color}] transition-colors`} style={{ color: isActive ? color : 'white' }}>{item.name}</h3>
                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">{item.category}</p>
-                                           <p className="text-[11px] text-gray-400 line-clamp-2 leading-relaxed">{item.description}</p>
+                                           <p className="text-xs md:text-[11px] text-gray-400 line-clamp-2 leading-relaxed">{item.description}</p>
                                        </div>
 
                                        <div className="relative z-10 mt-auto flex items-end justify-between">
-                                           <span className="text-xl font-bold text-cyan-400">₹{item.price}</span>
-                                           <div className="flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
+                                           <span className="text-lg md:text-xl font-bold text-cyan-400">₹{item.price}</span>
+                                           <div className="flex items-center gap-1 text-[10px] md:text-xs font-medium text-gray-500 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
                                                <Clock size={10} /> {item.prepTime}
                                            </div>
                                        </div>
@@ -1030,299 +1030,3 @@ const CustomerView = React.memo(({
     </div>
   );
 });
-
-const KitchenView = React.memo(({ orders, updateOrderStatus, menu, onLogout }: { orders: Order[]; updateOrderStatus: (id: string, status: Order['status']) => void; menu: MenuItem[]; onLogout: () => void }) => {
-  // Simplified KitchenView for brevity, assume full implementation exists
-    const pendingOrders = orders.filter(o => o.status === 'pending');
-    const preparingOrders = orders.filter(o => o.status === 'preparing');
-  
-    return (
-      <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-6 flex flex-col h-screen overflow-hidden">
-        <div className="flex justify-between items-center mb-6 flex-none">
-            <h1 className="text-2xl font-bold text-orange-500 flex items-center gap-3"><ChefHat /> Kitchen Display</h1>
-            <div className="flex gap-3">
-                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-white/10 flex gap-4">
-                   <span className="text-orange-400 font-bold">{pendingOrders.length} Pending</span>
-                   <span className="text-blue-400 font-bold">{preparingOrders.length} Preparing</span>
-                </div>
-                <button onClick={onLogout} className="p-2 bg-zinc-800 rounded-lg hover:bg-zinc-700"><LogOut size={20} /></button>
-            </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto space-y-8 custom-scrollbar pb-20">
-           <section>
-               <h2 className="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider sticky top-0 bg-zinc-950 py-2 z-10">New Orders</h2>
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                   {pendingOrders.map(order => (
-                       <div key={order.id} className="bg-zinc-900 border-l-4 border-orange-500 rounded-r-xl p-4 shadow-lg">
-                           <div className="flex justify-between mb-3 pb-3 border-b border-white/5">
-                               <div>
-                                   <h3 className="font-bold text-lg">{order.customerName}</h3>
-                                   <p className="text-xs text-gray-400">{order.id.slice(-4)} • {new Date(order.timestamp).toLocaleTimeString()}</p>
-                               </div>
-                               <div className="text-right">
-                                   <span className={`text-xs px-2 py-1 rounded font-bold ${order.customerInfo.serviceType === 'Dine-in' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>{order.customerInfo.serviceType}</span>
-                                   {order.customerInfo.tableNumber && <p className="text-sm font-bold mt-1">Table {order.customerInfo.tableNumber}</p>}
-                               </div>
-                           </div>
-                           <div className="space-y-2 mb-4">
-                               {order.items.map((item, idx) => {
-                                   const menuItem = menu.find(m => m.id === item.id);
-                                   const missing = menuItem?.missingIngredients;
-                                   return (
-                                       <div key={idx} className={`flex justify-between text-sm ${missing ? 'text-red-400 bg-red-500/10 p-1 rounded' : 'text-gray-300'}`}>
-                                           <span>{item.quantity}x {item.name}</span>
-                                           {missing && <span className="text-[10px] font-bold block">Missing: {missing.join(', ')}</span>}
-                                       </div>
-                                   );
-                               })}
-                           </div>
-                           <button onClick={() => updateOrderStatus(order.id, 'preparing')} className="w-full py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-bold text-sm transition-colors">Start Cooking</button>
-                       </div>
-                   ))}
-                   {pendingOrders.length === 0 && <p className="text-gray-600 italic col-span-full text-center py-10">No pending orders</p>}
-               </div>
-           </section>
-
-           <section>
-               <h2 className="text-lg font-bold text-gray-400 mb-4 uppercase tracking-wider sticky top-0 bg-zinc-950 py-2 z-10">In Progress</h2>
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                   {preparingOrders.map(order => (
-                       <div key={order.id} className="bg-zinc-900 border-l-4 border-blue-500 rounded-r-xl p-4 shadow-lg">
-                           <div className="flex justify-between mb-3 pb-3 border-b border-white/5">
-                               <div>
-                                   <h3 className="font-bold text-lg">{order.customerName}</h3>
-                                   <p className="text-xs text-gray-400">{order.id.slice(-4)}</p>
-                               </div>
-                               <span className="text-blue-400 font-bold animate-pulse"><Clock size={16} /> Cooking</span>
-                           </div>
-                           <div className="space-y-1 mb-4">
-                               {order.items.map((item, idx) => (
-                                   <div key={idx} className="flex justify-between text-sm text-gray-300">
-                                       <span>{item.quantity}x {item.name}</span>
-                                   </div>
-                               ))}
-                           </div>
-                           <button onClick={() => updateOrderStatus(order.id, 'ready')} className="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm transition-colors">Mark Ready</button>
-                       </div>
-                   ))}
-               </div>
-           </section>
-        </div>
-      </div>
-    );
-});
-
-const AdminView = React.memo(({ orders, updateOrderStatus, menu, onLogout }: { orders: Order[]; updateOrderStatus: (id: string, status: Order['status']) => void; menu: MenuItem[]; onLogout: () => void }) => {
-    // Simplified AdminView
-    return (
-        <div className="min-h-screen bg-zinc-950 text-white p-6">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold text-purple-500 flex items-center gap-3"><BarChart3 /> Admin Dashboard</h1>
-                <button onClick={onLogout} className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10"><LogOut size={18} /> Logout</button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-zinc-900 p-6 rounded-xl border border-white/5">
-                    <h3 className="text-gray-400 text-sm uppercase mb-2">Total Revenue</h3>
-                    <p className="text-3xl font-bold text-green-400">₹{orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount, 0)}</p>
-                </div>
-                <div className="bg-zinc-900 p-6 rounded-xl border border-white/5">
-                    <h3 className="text-gray-400 text-sm uppercase mb-2">Total Orders</h3>
-                    <p className="text-3xl font-bold text-blue-400">{orders.length}</p>
-                </div>
-                <div className="bg-zinc-900 p-6 rounded-xl border border-white/5">
-                    <h3 className="text-gray-400 text-sm uppercase mb-2">Active Orders</h3>
-                    <p className="text-3xl font-bold text-orange-400">{orders.filter(o => ['pending', 'preparing', 'ready'].includes(o.status)).length}</p>
-                </div>
-            </div>
-            {/* Orders Table would go here */}
-            <div className="bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-black/50 text-gray-400 uppercase">
-                        <tr>
-                            <th className="p-4">ID</th>
-                            <th className="p-4">Customer</th>
-                            <th className="p-4">Total</th>
-                            <th className="p-4">Status</th>
-                            <th className="p-4">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {orders.slice(0, 10).map(order => (
-                            <tr key={order.id} className="hover:bg-white/5">
-                                <td className="p-4 font-mono text-gray-500">{order.id.slice(-4)}</td>
-                                <td className="p-4">{order.customerName}</td>
-                                <td className="p-4 font-bold">₹{order.totalAmount}</td>
-                                <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${order.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{order.status}</span></td>
-                                <td className="p-4">
-                                    {order.status === 'ready' && <button onClick={() => updateOrderStatus(order.id, 'completed')} className="text-green-400 hover:text-green-300 font-bold text-xs border border-green-500/30 px-3 py-1 rounded">Complete</button>}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-});
-
-const LoginView = ({ onLogin, onBack }: { onLogin: (type: 'chef' | 'admin', remember: boolean) => boolean; onBack: () => void }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [remember, setRemember] = useState(true);
-    const [error, setError] = useState('');
-    const [target, setTarget] = useState<'chef' | 'admin'>('chef');
-
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (target === 'chef' && username === 'skylarkcafe' && password === 'kitchen123') {
-            onLogin('chef', remember);
-        } else if (target === 'admin' && username === 'skylark' && password === 'sanskar321') {
-            onLogin('admin', remember);
-        } else {
-            setError('Invalid credentials');
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black flex items-center justify-center p-4 z-[100]">
-            <div className="w-full max-w-md bg-zinc-900 rounded-2xl p-8 border border-white/10 shadow-2xl relative">
-                <button onClick={onBack} className="absolute top-4 right-4 text-gray-500 hover:text-white"><X size={24} /></button>
-                <h2 className="text-3xl font-bold text-white mb-6 text-center">Staff Login</h2>
-                <div className="flex mb-6 bg-black/50 p-1 rounded-xl">
-                    <button onClick={() => setTarget('chef')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${target === 'chef' ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>Kitchen</button>
-                    <button onClick={() => setTarget('admin')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${target === 'admin' ? 'bg-purple-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}>Admin</button>
-                </div>
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 outline-none" />
-                    <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-black border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 outline-none" />
-                    <div className="flex items-center gap-2">
-                        <input type="checkbox" id="remember" checked={remember} onChange={e => setRemember(e.target.checked)} className="rounded bg-zinc-800 border-white/10 text-cyan-500 focus:ring-0" />
-                        <label htmlFor="remember" className="text-sm text-gray-400">Remember me</label>
-                    </div>
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                    <button type="submit" className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 ${target === 'chef' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-purple-500 hover:bg-purple-600'}`}>Login</button>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-const App = () => {
-  const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'printable' | 'login'>('customer');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
-  const [isVegMode, setIsVegMode] = useState(false);
-  const [toast, setToast] = useState<{msg: string, visible: boolean}>({msg: '', visible: false});
-  const [loginTarget, setLoginTarget] = useState<'chef' | 'admin'>('chef');
-
-  useEffect(() => {
-      const savedAuth = localStorage.getItem('skylark_auth');
-      if (savedAuth) {
-          const auth = JSON.parse(savedAuth);
-          // Optional: Check timestamp for expiry
-          if (auth.type === 'chef') setView('kitchen');
-          if (auth.type === 'admin') setView('admin');
-      }
-  }, []);
-
-  const showToast = (msg: string) => {
-      setToast({ msg, visible: true });
-      setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 2000);
-  };
-
-  const addToCart = (item: MenuItem) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === item.id);
-      if (existing) return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-      return [...prev, { ...item, quantity: 1 }];
-    });
-    showToast(`Added ${item.name}`);
-  };
-
-  const removeFromCart = (itemId: string) => setCart(prev => prev.filter(i => i.id !== itemId));
-  
-  const updateQuantity = (itemId: string, delta: number) => {
-      setCart(prev => prev.map(item => {
-          if (item.id === itemId) {
-              const newQty = Math.max(0, item.quantity + delta);
-              return newQty === 0 ? null : { ...item, quantity: newQty };
-          }
-          return item;
-      }).filter(Boolean) as CartItem[]);
-  };
-
-  const placeOrder = (info: CustomerInfo) => {
-    const newOrder: Order = {
-      id: Math.random().toString(36).substr(2, 9),
-      customerName: info.name,
-      customerInfo: info,
-      items: cart,
-      status: 'pending',
-      totalAmount: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      timestamp: Date.now(),
-      estimatedTime: 20 // Dummy logic
-    };
-    setOrders(prev => [newOrder, ...prev]);
-    setCart([]);
-    showToast('Order Placed Successfully!');
-  };
-
-  const updateOrderStatus = (id: string, status: Order['status']) => {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-
-  const handleLogin = (type: 'chef' | 'admin', remember: boolean) => {
-      if (remember) {
-          localStorage.setItem('skylark_auth', JSON.stringify({ type, timestamp: Date.now() }));
-      }
-      setView(type === 'chef' ? 'kitchen' : 'admin');
-      return true;
-  };
-
-  const handleLogout = () => {
-      localStorage.removeItem('skylark_auth');
-      setView('customer');
-  };
-
-  return (
-    <>
-      {view === 'customer' && (
-        <CustomerView 
-            menu={menu} 
-            cart={cart} 
-            addToCart={addToCart} 
-            removeFromCart={removeFromCart} 
-            updateQuantity={updateQuantity}
-            clearCart={() => setCart([])}
-            placeOrder={placeOrder}
-            onNavigate={(v) => setView(v)}
-            toggleVegMode={() => setIsVegMode(!isVegMode)}
-            isVegMode={isVegMode}
-            onLogin={(type) => {
-                const saved = localStorage.getItem('skylark_auth');
-                if (saved) {
-                     const auth = JSON.parse(saved);
-                     if (auth.type === type) {
-                         setView(type === 'chef' ? 'kitchen' : 'admin');
-                         return;
-                     }
-                }
-                setLoginTarget(type);
-                setView('login');
-            }}
-        />
-      )}
-      {view === 'login' && <LoginView onLogin={handleLogin} onBack={() => setView('customer')} />}
-      {view === 'kitchen' && <KitchenView orders={orders} updateOrderStatus={updateOrderStatus} menu={menu} onLogout={handleLogout} />}
-      {view === 'admin' && <AdminView orders={orders} updateOrderStatus={updateOrderStatus} menu={menu} onLogout={handleLogout} />}
-      {view === 'printable' && <PrintableMenu menu={menu} />}
-      
-      <Toast message={toast.msg} visible={toast.visible} />
-    </>
-  );
-};
-
-const root = createRoot(document.getElementById('root')!);
-root.render(<App />);
