@@ -1,98 +1,79 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
-  ShoppingBag, 
   ChefHat, 
+  ShoppingCart, 
   Clock, 
   Search, 
-  XCircle, 
-  Download, 
-  Upload,
-  ToggleLeft, 
-  ToggleRight, 
-  Leaf, 
-  Drumstick, 
-  ArrowLeft, 
-  TrendingUp, 
-  AlertCircle, 
-  Printer, 
-  Menu as MenuIcon, 
-  User, 
-  Flame, 
+  Menu, 
+  X, 
+  Trash2, 
+  Plus, 
+  Minus, 
+  ChevronRight, 
+  Star, 
+  UtensilsCrossed, 
   Coffee, 
-  Utensils, 
-  Pizza, 
-  Sandwich, 
-  Soup, 
-  IceCream, 
-  CircleDot, 
-  Zap, 
-  Crop, 
-  GlassWater, 
-  Beer, 
-  DollarSign, 
-  Martini, 
-  AlignLeft,
-  Egg,
+  Flame, 
+  Users, 
+  LayoutDashboard, 
+  ClipboardList, 
+  Settings, 
+  LogOut,
+  ArrowLeft,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Printer,
+  MapPin,
+  DollarSign,
+  Leaf,
   Croissant,
+  Egg,
   Cookie,
   Carrot,
-  X,
-  LogOut,
-  Box,
-  Refrigerator,
-  CheckSquare, 
-  Square,
-  CheckCircle as CheckCircleIcon,
-  FileSpreadsheet,
-  Trash2,
-  Plus,
-  Minus,
-  Edit,
-  Save,
-  RefreshCw,
-  BedDouble,
-  Home,
-  Lock,
-  Calendar,
-  ClipboardList,
-  Package,
-  Truck,
-  Activity,
-  AlertTriangle,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
+  GlassWater,
+  Pizza,
+  Soup,
+  Drumstick,
   ChevronUp,
   ChevronDown,
-  MoreHorizontal,
-  BarChart3,
-  CalendarDays,
-  MapPin,
-  Phone,
-  Hash,
-  Play,
-  CheckCircle2,
-  Bell,
-  ArrowUp
+  Download,
+  Calendar,
+  Package,
+  Edit,
+  Save,
+  Upload,
+  FileSpreadsheet,
+  List,
+  Activity,
+  TrendingUp,
+  Bed
 } from 'lucide-react';
 
 // --- Types ---
 
-type Category = string;
+type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)' | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Breads' | 'Stay';
 
-type PrepTime = 'Quick' | 'Medium' | 'Slow';
-
-interface MenuItem {
+interface Ingredient {
   id: string;
   name: string;
-  category: Category;
+  category: 'Dairy' | 'Vegetable' | 'Protein' | 'Grain' | 'Spice' | 'Sauce' | 'Other';
+  inStock: boolean;
+  unit: string;
+}
+
+interface MenuItem {
+  name: string;
   price: number;
+  category: Category;
   isVeg: boolean;
-  prepTime: PrepTime;
   available: boolean;
   description: string;
-  missingIngredients?: string[]; 
+  prepTime: number; // minutes
+  id: string;
+  requiredIngredients: string[]; // IDs of ingredients
+  missingIngredients?: string[]; // Computed field
 }
 
 interface CartItem extends MenuItem {
@@ -110,275 +91,312 @@ interface CustomerInfo {
 
 interface Order {
   id: string;
-  customerName: string;
-  customerInfo: CustomerInfo;
   items: CartItem[];
+  total: number;
   status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
-  totalAmount: number;
-  timestamp: number;
-  estimatedTime: number; 
+  timestamp: Date;
+  customerInfo: CustomerInfo;
+  estimatedTime?: number; // minutes
 }
-
-type IngredientCategory = 'Dairy' | 'Vegetables' | 'Proteins' | 'Pantry' | 'Beverages' | 'Breads';
-
-interface Ingredient {
-  id: string;
-  name: string;
-  category: IngredientCategory;
-  inStock: boolean;
-}
-
-// --- New Types for Inventory & Calendar ---
-
-type InventoryArea = 'Rooms' | 'Kitchen' | 'Open Area';
-type InventoryStatus = 'Good' | 'Needs Replacement' | 'Damaged';
 
 interface InventoryItem {
     id: string;
     name: string;
     quantity: number;
     unit: string;
-    area: InventoryArea;
+    area: 'Rooms' | 'Kitchen' | 'Open Area';
     category: string;
     purchaseDate: string;
     cost: number;
     supplier: string;
-    status: InventoryStatus;
-    minStock: number;
+    status: 'Good' | 'Needs Replacement' | 'Damaged';
 }
 
 interface PurchaseLog {
     id: string;
     date: string;
-    itemId: string;
-    itemName: string;
+    item: string;
     quantity: number;
     cost: number;
     supplier: string;
-    area: InventoryArea;
+    area: string;
     invoiceNumber: string;
 }
-
-interface UsageLog {
-    id: string;
-    date: string;
-    itemId: string;
-    itemName: string;
-    areaUsed: InventoryArea;
-    quantityUsed: number;
-    purpose: string;
-}
-
-type EventPriority = 'High' | 'Medium' | 'Low';
-type EventCategory = 'Operations' | 'Maintenance' | 'Events' | 'Staff' | 'Inventory';
-type EventStatus = 'Pending' | 'In Progress' | 'Completed';
 
 interface CalendarEvent {
     id: string;
     title: string;
-    date: string; // YYYY-MM-DD
-    priority: EventPriority;
-    category: EventCategory;
-    status: EventStatus;
-    description: string;
+    date: string;
+    priority: 'High' | 'Medium' | 'Low';
+    category: 'Operations' | 'Maintenance' | 'Events' | 'Staff' | 'Inventory';
+    status: 'Pending' | 'In Progress' | 'Completed';
 }
 
-// --- Master Ingredient List ---
+// --- Constants & Data ---
 
-const INITIAL_INGREDIENTS: Ingredient[] = [
-    { id: 'milk', name: 'Milk', category: 'Dairy', inStock: true },
-    { id: 'curd', name: 'Curd (Dahi)', category: 'Dairy', inStock: true },
-    { id: 'paneer', name: 'Paneer', category: 'Dairy', inStock: true },
-    { id: 'butter', name: 'Butter', category: 'Dairy', inStock: true },
-    { id: 'cheese_slice', name: 'Cheese Slices', category: 'Dairy', inStock: true },
-    { id: 'mozzarella', name: 'Mozzarella Cheese', category: 'Dairy', inStock: true },
-    { id: 'cream', name: 'Fresh Cream', category: 'Dairy', inStock: true },
-    { id: 'ice_cream', name: 'Vanilla Ice Cream', category: 'Dairy', inStock: true },
-    { id: 'onion', name: 'Onion', category: 'Vegetables', inStock: true },
-    { id: 'tomato', name: 'Tomato', category: 'Vegetables', inStock: true },
-    { id: 'capsicum', name: 'Capsicum', category: 'Vegetables', inStock: true },
-    { id: 'cucumber', name: 'Cucumber', category: 'Vegetables', inStock: true },
-    { id: 'potato', name: 'Potato', category: 'Vegetables', inStock: true },
-    { id: 'mushroom', name: 'Mushroom', category: 'Vegetables', inStock: true },
-    { id: 'corn', name: 'Sweet Corn', category: 'Vegetables', inStock: true },
-    { id: 'peas', name: 'Green Peas', category: 'Vegetables', inStock: true },
-    { id: 'cauliflower', name: 'Cauliflower (Gobhi)', category: 'Vegetables', inStock: true },
-    { id: 'lemon', name: 'Lemon', category: 'Vegetables', inStock: true },
-    { id: 'coriander', name: 'Coriander/Mint', category: 'Vegetables', inStock: true },
-    { id: 'garlic', name: 'Garlic', category: 'Vegetables', inStock: true },
-    { id: 'ginger', name: 'Ginger', category: 'Vegetables', inStock: true },
-    { id: 'chicken', name: 'Chicken', category: 'Proteins', inStock: true },
-    { id: 'mutton', name: 'Mutton', category: 'Proteins', inStock: true },
-    { id: 'egg', name: 'Eggs', category: 'Proteins', inStock: true },
-    { id: 'maggi', name: 'Maggi Noodles', category: 'Pantry', inStock: true },
-    { id: 'pasta_penne', name: 'Penne Pasta', category: 'Pantry', inStock: true },
-    { id: 'rice', name: 'Basmati Rice', category: 'Pantry', inStock: true },
-    { id: 'noodles', name: 'Hakka Noodles', category: 'Pantry', inStock: true },
-    { id: 'burger_bun', name: 'Burger Buns', category: 'Breads', inStock: true },
-    { id: 'bread', name: 'Bread Slices', category: 'Breads', inStock: true },
-    { id: 'pizza_base', name: 'Pizza Base', category: 'Breads', inStock: true },
-    { id: 'fries_frozen', name: 'Frozen Fries', category: 'Pantry', inStock: true },
-    { id: 'momos_wrapper', name: 'Momos Wrapper/Flour', category: 'Pantry', inStock: true },
-    { id: 'atta', name: 'Atta (Wheat Flour)', category: 'Breads', inStock: true },
-    { id: 'maida', name: 'Maida (Refined Flour)', category: 'Breads', inStock: true },
-    { id: 'coffee_powder', name: 'Coffee Powder', category: 'Beverages', inStock: true },
-    { id: 'tea_leaves', name: 'Tea Leaves', category: 'Beverages', inStock: true },
-    { id: 'sugar', name: 'Sugar/Syrup', category: 'Beverages', inStock: true },
-    { id: 'soda', name: 'Soda Water', category: 'Beverages', inStock: true },
-    { id: 'coconut_water', name: 'Coconut Water', category: 'Beverages', inStock: true },
-    { id: 'syrup_blue', name: 'Blue Curacao Syrup', category: 'Beverages', inStock: true },
-    { id: 'syrup_mint', name: 'Mint Syrup', category: 'Beverages', inStock: true },
-    { id: 'syrup_kiwi', name: 'Kiwi Syrup', category: 'Beverages', inStock: true },
-    { id: 'syrup_apple', name: 'Green Apple Syrup', category: 'Beverages', inStock: true },
-    { id: 'syrup_mango', name: 'Mango Syrup', category: 'Beverages', inStock: true },
-    { id: 'chocolate', name: 'Chocolate/Cocoa', category: 'Pantry', inStock: true },
-    { id: 'oreo', name: 'Oreo Biscuits', category: 'Pantry', inStock: true },
-    { id: 'kitkat', name: 'KitKat', category: 'Pantry', inStock: true },
-    { id: 'banana', name: 'Banana', category: 'Vegetables', inStock: true },
-    { id: 'papaya', name: 'Papaya', category: 'Vegetables', inStock: true },
+// Master Ingredient List
+const MASTER_INGREDIENTS: Ingredient[] = [
+  // Dairy
+  { id: 'ing_milk', name: 'Milk', category: 'Dairy', inStock: true, unit: 'L' },
+  { id: 'ing_cheese', name: 'Cheese', category: 'Dairy', inStock: true, unit: 'kg' },
+  { id: 'ing_butter', name: 'Butter', category: 'Dairy', inStock: true, unit: 'kg' },
+  { id: 'ing_paneer', name: 'Paneer', category: 'Dairy', inStock: true, unit: 'kg' },
+  { id: 'ing_cream', name: 'Fresh Cream', category: 'Dairy', inStock: true, unit: 'L' },
+  { id: 'ing_dahi', name: 'Curd (Dahi)', category: 'Dairy', inStock: true, unit: 'kg' },
+  // Vegetables
+  { id: 'ing_onion', name: 'Onion', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_tomato', name: 'Tomato', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_potato', name: 'Potato', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_capsicum', name: 'Capsicum', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_mushroom', name: 'Mushroom', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_cucumber', name: 'Cucumber', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_spinach', name: 'Spinach (Palak)', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_coriander', name: 'Coriander', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_lemon', name: 'Lemon', category: 'Vegetable', inStock: true, unit: 'pcs' },
+  { id: 'ing_garlic', name: 'Garlic', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_ginger', name: 'Ginger', category: 'Vegetable', inStock: true, unit: 'kg' },
+  { id: 'ing_chilli', name: 'Green Chilli', category: 'Vegetable', inStock: true, unit: 'kg' },
+  // Proteins
+  { id: 'ing_chicken', name: 'Chicken', category: 'Protein', inStock: true, unit: 'kg' },
+  { id: 'ing_mutton', name: 'Mutton', category: 'Protein', inStock: true, unit: 'kg' },
+  { id: 'ing_egg', name: 'Eggs', category: 'Protein', inStock: true, unit: 'tray' },
+  // Grains & Breads
+  { id: 'ing_bread', name: 'Bread', category: 'Grain', inStock: true, unit: 'pack' },
+  { id: 'ing_rice', name: 'Rice', category: 'Grain', inStock: true, unit: 'kg' },
+  { id: 'ing_noodles', name: 'Noodles', category: 'Grain', inStock: true, unit: 'pack' },
+  { id: 'ing_pasta', name: 'Pasta', category: 'Grain', inStock: true, unit: 'pack' },
+  { id: 'ing_flour', name: 'Atta/Maida', category: 'Grain', inStock: true, unit: 'kg' },
+  { id: 'ing_maggi', name: 'Maggi Pack', category: 'Grain', inStock: true, unit: 'pack' },
+  // Pantry
+  { id: 'ing_sugar', name: 'Sugar', category: 'Other', inStock: true, unit: 'kg' },
+  { id: 'ing_tea', name: 'Tea Leaves', category: 'Other', inStock: true, unit: 'kg' },
+  { id: 'ing_coffee', name: 'Coffee Powder', category: 'Other', inStock: true, unit: 'kg' },
+  { id: 'ing_oil', name: 'Cooking Oil', category: 'Other', inStock: true, unit: 'L' },
+  { id: 'ing_chocolate', name: 'Chocolate Syrup', category: 'Sauce', inStock: true, unit: 'btl' },
+  { id: 'ing_mayo', name: 'Mayonnaise', category: 'Sauce', inStock: true, unit: 'btl' },
+  { id: 'ing_ketchup', name: 'Ketchup', category: 'Sauce', inStock: true, unit: 'btl' },
 ];
 
-const INITIAL_INVENTORY: InventoryItem[] = [
-    { id: '1', name: 'Bed Sheets (King)', quantity: 12, unit: 'pcs', area: 'Rooms', category: 'Linen', purchaseDate: '2023-10-01', cost: 500, supplier: 'Kasol Textiles', status: 'Good', minStock: 5 },
-    { id: '2', name: 'Towels', quantity: 20, unit: 'pcs', area: 'Rooms', category: 'Toiletries', purchaseDate: '2023-10-15', cost: 200, supplier: 'Kasol Textiles', status: 'Good', minStock: 10 },
-    { id: '3', name: 'Fry Pan', quantity: 4, unit: 'pcs', area: 'Kitchen', category: 'Cookware', purchaseDate: '2023-09-01', cost: 1200, supplier: 'Chef Supply Co', status: 'Needs Replacement', minStock: 3 },
-    { id: '4', name: 'Outdoor Chairs', quantity: 15, unit: 'pcs', area: 'Open Area', category: 'Furniture', purchaseDate: '2023-05-20', cost: 800, supplier: 'Local Woodworks', status: 'Good', minStock: 15 }
-];
+// Helper to find ingredient IDs
+const getIngIds = (names: string[]): string[] => {
+    return names.map(n => MASTER_INGREDIENTS.find(i => i.name.toLowerCase().includes(n.toLowerCase()))?.id || '').filter(id => id !== '');
+}
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-    { id: '1', title: 'Staff Meeting', date: new Date().toISOString().split('T')[0], priority: 'High', category: 'Staff', status: 'Completed', description: 'Weekly briefing' },
-    { id: '2', title: 'Generator Maintenance', date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], priority: 'High', category: 'Maintenance', status: 'Pending', description: 'Check oil and filters' }
-];
-
-const ITEM_RECIPES: { [key: string]: string[] } = {
-    'Hot Coffee': ['milk', 'coffee_powder', 'sugar'],
-    'Masala Chai': ['milk', 'tea_leaves', 'sugar', 'ginger'],
-    'Cold Coffee': ['milk', 'coffee_powder', 'sugar', 'ice_cream'],
-    'Oreo Shake': ['milk', 'oreo', 'ice_cream', 'sugar'],
-    'KitKat Shake': ['milk', 'kitkat', 'ice_cream', 'sugar'],
-    'Banana Shake': ['milk', 'banana', 'sugar'],
-    'Papaya Shake': ['milk', 'papaya', 'sugar'],
-    'Butter Toast': ['bread', 'butter'],
-    'Cheese Toast': ['bread', 'cheese_slice', 'butter'],
-    'Nutella Sandwich': ['bread', 'chocolate', 'butter'],
-    'Veg Burger': ['burger_bun', 'potato', 'onion', 'tomato', 'cucumber'],
-    'Veg Cheese Burger': ['burger_bun', 'cheese_slice', 'potato', 'onion', 'tomato'],
-    'Plain Maggi': ['maggi'],
-    'Vegetable Maggi': ['maggi', 'onion', 'tomato', 'peas', 'carrot'],
-    'Cheese Maggi': ['maggi', 'cheese_slice'],
-    'Plain Fries': ['fries_frozen'],
-    'Masala Fries': ['fries_frozen'],
-    'Red Sauce Pasta': ['pasta_penne', 'tomato', 'onion', 'capsicum', 'corn'],
-    'White Sauce Pasta': ['pasta_penne', 'milk', 'cheese_slice', 'corn', 'capsicum'],
-    'Veg Momos': ['momos_wrapper', 'cabbage', 'carrot', 'onion'],
-    'Paneer Momos': ['momos_wrapper', 'paneer', 'onion'],
-    'Margherita Pizza': ['pizza_base', 'mozzarella', 'tomato'],
-    'Veggie Pizza': ['pizza_base', 'mozzarella', 'onion', 'capsicum', 'corn', 'mushroom'],
-    'Paneer Pizza': ['pizza_base', 'mozzarella', 'paneer', 'onion', 'capsicum'],
-};
-
-const generateMenuId = () => Math.random().toString(36).substr(2, 9);
-
-const RAW_MENU_DATA = {
-  stay: [
-      { cat: 'Stay', items: [['Room - Accommodates up to 3', 1800, 'Slow', '1 Double Bed | Attached Washroom | Cozy & Comfortable'], ['Room - Accommodates up to 8', 3500, 'Slow', '2 Double Beds | Attached Bathroom | Spacious & Family Friendly']] }
+const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] } = {
+  'Breakfast': [
+    ['Butter Toast', 80, '10 mins', 'Crispy toast served with generous butter'],
+    ['Nutella Sandwich', 160, '10 mins', 'Loaded with creamy Nutella spread'],
+    ['Cheese Toast', 120, '10 mins', 'Topped with melted mozzarella cheese'],
+    ['Aloo Paratha', 100, '15 mins', 'Stuffed with spiced mashed potatoes'],
+    ['Mix Veg Paratha', 120, '15 mins', 'Stuffed with mixed vegetables'],
+    ['Paneer Paratha', 140, '15 mins', 'Stuffed with fresh spiced paneer'],
+    ['Gobhi Paratha', 120, '15 mins', 'Stuffed with spiced cauliflower'],
+    ['Pizza Paratha', 160, '20 mins', 'Fusion paratha with pizza fillings'],
+    ['Butter Roti', 30, '5 mins', 'Soft wheat flatbread with butter'],
+    ['Plain Roti', 20, '5 mins', 'Traditional soft wheat flatbread']
   ],
-  veg: [
-    { cat: 'Beverages (Hot)', items: [['Hot Coffee', 30, 'Quick'], ['Masala Chai', 20, 'Quick'], ['Ginger Tea', 20, 'Quick'], ['Lemon Tea', 20, 'Quick'], ['Green Tea', 30, 'Quick'], ['Hot Chocolate', 60, 'Quick']] },
-    { cat: 'Beverages (Cold)', items: [['Blue Crushers', 200, 'Quick'], ['Mint Mojito', 240, 'Quick'], ['Kiwi Mojito', 260, 'Quick'], ['Green Apple Mojito', 260, 'Quick'], ['Spicy Mango Soda', 200, 'Quick'], ['Fresh Lime Soda', 160, 'Quick'], ['Coconut Water', 120, 'Quick'], ['Cold Coffee', 240, 'Quick']] },
-    { cat: 'Maggi', items: [['Plain Maggi', 80, 'Quick'], ['Cheese Maggi', 120, 'Quick'], ['Vegetable Maggi', 100, 'Quick'], ['Butter Maggi', 90, 'Quick'], ['Tandoori Maggi', 110, 'Quick']] },
-    { cat: 'Breakfast', items: [['Butter Toast', 80, 'Quick'], ['Nutella Sandwich', 160, 'Quick'], ['Cheese Toast', 120, 'Quick'], ['Aloo Paratha', 100, 'Medium'], ['Mix Veg Paratha', 120, 'Medium'], ['Paneer Paratha', 140, 'Medium'], ['Gobhi Paratha', 120, 'Medium'], ['Pizza Paratha', 160, 'Medium'], ['Butter Roti', 30, 'Medium'], ['Plain Roti', 20, 'Medium']] },
-    { cat: 'Sandwich', items: [['Veg Sandwich', 100, 'Quick'], ['Cheese Sandwich', 120, 'Quick'], ['Veg Grilled Sandwich', 140, 'Medium'], ['Paneer Grilled Sandwich', 160, 'Medium'], ['Corn Cheese Sandwich', 150, 'Medium'], ['Bombay Sandwich', 140, 'Medium'], ['Club Sandwich', 180, 'Medium']] },
-    { cat: 'Burgers', items: [['Veg Burger', 120, 'Medium'], ['Veg Cheese Burger', 140, 'Medium'], ['Paneer Burger', 160, 'Medium'], ['Maharaja Burger', 200, 'Medium']] },
-    { cat: 'Pasta', items: [['Red Sauce Pasta', 180, 'Medium'], ['White Sauce Pasta', 200, 'Medium'], ['Mix Sauce Pasta', 220, 'Medium']] },
-    { cat: 'Pizza', items: [['Margherita Pizza', 200, 'Slow'], ['Veggie Delight Pizza', 240, 'Slow'], ['Paneer Tikka Pizza', 280, 'Slow'], ['Farmhouse Pizza', 260, 'Slow'], ['Mushroom Pizza', 260, 'Slow']] },
-    { cat: 'Momos', items: [['Veg Steamed Momos', 100, 'Medium'], ['Veg Fried Momos', 120, 'Medium'], ['Paneer Steamed Momos', 140, 'Medium'], ['Paneer Fried Momos', 160, 'Medium'], ['Veg Kurkure Momos', 150, 'Medium']] },
-    { cat: 'Fries', items: [['French Fries', 160, 'Quick'], ['Masala Fries', 200, 'Quick'], ['Cheese Fries', 240, 'Quick'], ['Peri Peri Fries', 180, 'Quick']] },
-    { cat: 'Salad', items: [['Mix Veg Salad', 100, 'Quick'], ['Onion Salad', 60, 'Quick'], ['Cucumber Salad', 80, 'Quick'], ['Cucumber with Black Pepper Mayo', 120, 'Quick']] },
-    { cat: 'Raita', items: [['Plain Dahi', 80, 'Quick'], ['Jeera Raita', 100, 'Quick'], ['Boondi Raita', 120, 'Quick'], ['Mix Veg Raita', 140, 'Quick']] },
-    { cat: 'Shakes/Lassi', items: [['Banana Shake', 200, 'Quick'], ['Chocobar Shake', 240, 'Quick'], ['Papaya Shake', 200, 'Quick'], ['Sweet Lassi', 160, 'Quick'], ['Oreo Shake', 220, 'Quick'], ['Kitkat Shake', 240, 'Quick'], ['Strawberry Shake', 200, 'Quick']] },
-    { cat: 'Chinese', items: [['Veg Noodles', 160, 'Medium'], ['Veg Hakka Noodles', 180, 'Medium'], ['Chilly Paneer', 360, 'Medium'], ['Veg Manchurian', 280, 'Medium'], ['Fried Rice', 180, 'Medium'], ['Schezwan Fried Rice', 200, 'Medium'], ['Honey Chilli Potato', 240, 'Medium'], ['Spring Rolls', 160, 'Medium']] },
-    { cat: 'Soup', items: [['Tomato Soup', 100, 'Medium'], ['Veg Manchow Soup', 120, 'Medium'], ['Sweet Corn Soup', 120, 'Medium'], ['Hot & Sour Soup', 120, 'Medium']] },
-    { cat: 'Main Course', items: [['Paneer Methi', 360, 'Slow'], ['Paneer Butter Masala', 400, 'Slow'], ['Paneer Hotel Style', 400, 'Slow'], ['Kadai Paneer', 400, 'Slow'], ['Mix Veg', 300, 'Slow'], ['Navratna Korma', 360, 'Slow'], ['Malai Kofta', 380, 'Slow'], ['Mutter Paneer', 360, 'Slow'], ['Shahi Paneer', 420, 'Slow'], ['Dal Fry', 240, 'Slow'], ['Dal Tadka', 260, 'Slow'], ['Jeera Rice', 120, 'Medium'], ['Plain Rice', 100, 'Medium']] },
-    { cat: 'Tandoor', items: [['Mushroom Tikka', 400, 'Slow'], ['Masala Aloo', 300, 'Slow'], ['Angara Paneer Tikka', 440, 'Slow'], ['Malai Paneer Tikka', 440, 'Slow'], ['Paneer Garlic Tikka', 440, 'Slow'], ['Tandoori Aloo', 280, 'Slow']] },
-    { cat: 'Desserts', items: [['Ice Cream', 160, 'Quick'], ['Gulab Jamun', 120, 'Quick']] }
+  'Maggi': [
+    ['Plain Maggi', 80, '10 mins', 'Classic comfort food'],
+    ['Cheese Maggi', 120, '10 mins', 'Loaded with grated cheese'],
+    ['Vegetable Maggi', 100, '15 mins', 'Cooked with fresh garden veggies'],
+    ['Egg Maggi', 140, '15 mins', 'Classic Maggi with scrambled eggs'],
+    ['Chicken Maggi', 200, '20 mins', 'Maggi with tender chicken chunks']
   ],
-  nonveg: [
-    { cat: 'Breakfast', items: [['Egg Sandwich', 140, 'Quick'], ['Omelette Simple', 80, 'Quick'], ['Omelette Plain', 100, 'Quick'], ['Omelette Loaded', 160, 'Quick'], ['Omelette Cheese', 140, 'Quick'], ['Omelette Pepper', 120, 'Quick'], ['Omelette Butter', 120, 'Quick']] },
-    { cat: 'Egg Dishes', items: [['Egg Bhurji', 160, 'Medium'], ['Egg Curry', 200, 'Medium']] },
-    { cat: 'Maggi', items: [['Egg Maggi', 140, 'Quick'], ['Chicken Maggi', 200, 'Quick']] },
-    { cat: 'Rice', items: [['Egg Fried Rice', 280, 'Medium'], ['Chicken Fried Rice', 320, 'Medium']] },
-    { cat: 'Noodles', items: [['Egg Fried Noodles', 280, 'Medium'], ['Chicken Noodles', 320, 'Medium']] },
-    { cat: 'Main Course', items: [['Chicken Curry', 440, 'Slow'], ['Chicken Jalfrezi Dry/Gravy', 480, 'Slow'], ['Lemon Chicken Dry/Gravy', 480, 'Slow'], ['Chicken Kebab', 400, 'Slow'], ['Butter Chicken', 500, 'Slow'], ['Kadhai Chicken', 480, 'Slow']] },
-    { cat: 'Mutton', items: [['Mutton Rogan Josh', 600, 'Slow'], ['Mutton Curry', 560, 'Slow'], ['Rara Mutton', 640, 'Slow'], ['Mutton Kebab', 500, 'Slow']] },
-    { cat: 'Tandoor', items: [['Tandoori Malai Chicken', 480, 'Slow'], ['Ginger Garlic Chicken', 480, 'Slow'], ['Kali Mirch Chicken', 480, 'Slow'], ['Mutton Seekh Kebab', 560, 'Slow'], ['Chicken Tikka', 450, 'Slow'], ['Tandoori Chicken', 500, 'Slow']] },
-    { cat: 'Chinese', items: [['Chilly Chicken Boneless', 440, 'Medium'], ['Chilly Chicken With Bone', 400, 'Medium'], ['Chicken Momos', 200, 'Medium'], ['Chicken Fried Momos', 220, 'Medium'], ['Chicken Spring Rolls', 220, 'Medium'], ['Chicken Manchow Soup', 160, 'Medium']] }
+  'Salad': [
+    ['Mix Veg Salad', 100, '10 mins', 'Fresh seasonal vegetables'],
+    ['Onion Salad', 60, '5 mins', 'Sliced onions with lemon and spices'],
+    ['Cucumber Salad', 80, '5 mins', 'Fresh crunchy cucumber slices'],
+    ['Cucumber with Black Pepper Mayo', 120, '10 mins', 'Cucumber tossed in creamy mayo']
+  ],
+  'Raita': [
+    ['Plain Dahi', 80, '5 mins', 'Fresh homemade yogurt'],
+    ['Jeera Raita', 100, '5 mins', 'Yogurt spiced with roasted cumin'],
+    ['Boondi Raita', 120, '5 mins', 'Yogurt with crispy chickpea pearls'],
+    ['Mix Veg Raita', 140, '10 mins', 'Yogurt with chopped vegetables']
+  ],
+  'Rice': [
+    ['Plain Rice', 120, '15 mins', 'Steamed basmati rice'],
+    ['Jeera Rice', 160, '15 mins', 'Rice tempered with cumin seeds'],
+    ['Garlic Lemon Rice', 180, '20 mins', 'Tangy and garlicky fried rice'],
+    ['Veg Fried Rice', 240, '20 mins', 'Wok-tossed rice with veggies'],
+    ['Mushroom Fried Rice', 280, '20 mins', 'Fried rice with fresh mushrooms'],
+    ['Onion Fried Rice', 200, '20 mins', 'Fried rice with caramelized onions'],
+    ['Egg Fried Rice', 280, '20 mins', 'Wok-tossed rice with eggs'],
+    ['Chicken Fried Rice', 320, '25 mins', 'Fried rice with chicken chunks']
+  ],
+  'Noodles': [
+    ['Veg Fried Noodles', 240, '20 mins', 'Stir-fried noodles with veggies'],
+    ['Mushroom Noodles', 280, '20 mins', 'Noodles tossed with mushrooms'],
+    ['Egg Fried Noodles', 280, '20 mins', 'Noodles stir-fried with eggs']
+  ],
+  'Main Course': [
+    ['Paneer Methi', 360, '30 mins', 'Paneer cooked with fenugreek leaves'],
+    ['Paneer Butter', 400, '30 mins', 'Rich tomato-based paneer gravy'],
+    ['Paneer Hotel Style', 400, '30 mins', 'Spicy restaurant-style paneer'],
+    ['Kadai Paneer', 400, '30 mins', 'Paneer cooked with bell peppers'],
+    ['Mix Veg', 300, '25 mins', 'Assorted vegetables in spiced gravy'],
+    ['Navratna Korma', 360, '30 mins', 'Rich creamy curry with fruits/nuts'],
+    ['Malai Kofta', 380, '35 mins', 'Potato-paneer balls in white gravy'],
+    ['Mutter Paneer', 360, '30 mins', 'Peas and paneer in tomato gravy'],
+    ['Shahi Paneer', 420, '30 mins', 'Royal creamy paneer curry'],
+    ['Butter Paneer Masala', 420, '30 mins', 'Rich buttery paneer gravy'],
+    ['Dal Fry', 240, '20 mins', 'Yellow lentils tempered with spices'],
+    ['Dal Tadka', 260, '20 mins', 'Yellow lentils with garlic tadka']
+  ],
+  'Tandoor': [
+    ['Mushroom Tikka', 400, '30 mins', 'Char-grilled spiced mushrooms'],
+    ['Masala Aloo', 300, '25 mins', 'Spiced tandoori potatoes'],
+    ['Angara Paneer Tikka', 440, '30 mins', 'Spicy smoked paneer tikka'],
+    ['Malai Paneer Tikka', 440, '30 mins', 'Creamy mild paneer tikka'],
+    ['Paneer Garlic Tikka', 440, '30 mins', 'Garlic infused paneer tikka'],
+    ['Tandoori Aloo', 280, '25 mins', 'Marinated potatoes roasted in clay oven'],
+    ['Tandoori Malai Chicken', 480, '35 mins', 'Creamy grilled chicken'],
+    ['Ginger Garlic Chicken', 480, '35 mins', 'Chicken with strong ginger garlic flavors'],
+    ['Kali Mirch Chicken', 480, '35 mins', 'Peppery tandoori chicken'],
+    ['Mutton Seekh Kebab', 560, '35 mins', 'Minced mutton skewers']
+  ],
+  'Chinese': [
+    ['Chilly Paneer', 360, '25 mins', 'Crispy paneer in spicy soy sauce'],
+    ['Honey Crispy Potato', 300, '20 mins', 'Sweet and spicy crispy potatoes'],
+    ['Chilly Baby Corn', 320, '25 mins', 'Crispy baby corn in chili sauce'],
+    ['Chilly Chicken Boneless', 440, '30 mins', 'Spicy boneless chicken'],
+    ['Chilly Chicken With Bone', 400, '30 mins', 'Traditional chili chicken']
+  ],
+  'Soups': [
+    ['Tomato Soup', 160, '15 mins', 'Classic creamy tomato soup'],
+    ['Veg Soup', 180, '15 mins', 'Mixed vegetable soup']
+  ],
+  'Fries': [
+    ['French Fries', 160, '15 mins', 'Crispy golden potato fries'],
+    ['Masala Fries', 200, '15 mins', 'Fries tossed in spicy masala'],
+    ['Cheese Fries', 240, '15 mins', 'Fries topped with melted cheese']
+  ],
+  'Beverages (Cold)': [
+    ['Blue Crushers', 200, '5 mins', 'Refreshing blue curacao drink'],
+    ['Mint Mojito', 240, '5 mins', 'Minty lime refresher'],
+    ['Kiwi Mojito', 260, '5 mins', 'Kiwi flavored mojito'],
+    ['Green Apple Mojito', 260, '5 mins', 'Green apple flavored mojito'],
+    ['Spicy Mango Soda', 200, '5 mins', 'Mango soda with a spicy kick'],
+    ['Fresh Lime Soda', 160, '5 mins', 'Classic lemon soda'],
+    ['Coconut Water', 120, '5 mins', 'Fresh tender coconut water'],
+    ['Cold Coffee', 240, '10 mins', 'Chilled creamy coffee']
+  ],
+  'Beverages (Hot)': [
+      ['Hot Coffee', 160, '10 mins', 'Steaming hot cappuccino'],
+      ['Masala Chai', 80, '10 mins', 'Spiced Indian tea']
+  ],
+  'Shakes/Lassi': [
+    ['Banana Shake', 200, '10 mins', 'Creamy fresh banana shake'],
+    ['Chocobar Shake', 240, '10 mins', 'Shake made with chocobar ice cream'],
+    ['Papaya Shake', 200, '10 mins', 'Fresh papaya shake'],
+    ['Sweet Lassi', 160, '10 mins', 'Traditional sweet yogurt drink']
+  ],
+  'Desserts': [
+    ['Ice Cream', 160, '5 mins', 'Scoop of vanilla/chocolate ice cream'],
+    ['Gulab Jamun', 120, '5 mins', 'Warm sweet syrup dumplings']
+  ],
+  'Eggs': [
+      ['Egg Sandwich', 140, '15 mins', 'Sandwich with boiled/fried egg'],
+      ['Omelette Simple', 80, '10 mins', 'Basic beaten egg omelette'],
+      ['Omelette Plain', 100, '10 mins', 'Seasoned plain omelette'],
+      ['Omelette Loaded', 160, '15 mins', 'Omelette with veggies and cheese'],
+      ['Omelette Cheese', 140, '15 mins', 'Cheesy fluffy omelette'],
+      ['Omelette Pepper', 120, '10 mins', 'Omelette with black pepper'],
+      ['Omelette Butter', 120, '10 mins', 'Butter fried omelette'],
+      ['Egg Bhurji', 160, '15 mins', 'Spiced scrambled eggs'],
+      ['Egg Curry', 200, '25 mins', 'Boiled eggs in spicy gravy']
+  ],
+  'Non-Veg Main': [
+      ['Chicken Curry', 440, '35 mins', 'Homestyle chicken curry'],
+      ['Chicken Jalfrezi Dry/Gravy', 480, '35 mins', 'Spicy stir-fried chicken with veggies'],
+      ['Lemon Chicken Dry/Gravy', 480, '35 mins', 'Tangy lemon flavored chicken'],
+      ['Chicken Kebab', 400, '30 mins', 'Spiced minced chicken kebabs']
+  ],
+  'Mutton': [
+      ['Mutton Rogan Josh', 600, '45 mins', 'Kashmiri style mutton curry'],
+      ['Mutton Curry', 560, '45 mins', 'Traditional mutton curry'],
+      ['Rara Mutton', 640, '45 mins', 'Mutton chunks in minced mutton gravy'],
+      ['Mutton Kebab', 500, '35 mins', 'Spiced grilled mutton patties']
+  ],
+  'Burgers': [
+      ['Veg Burger', 130, '15 mins', 'Classic veg patty burger'],
+      ['Veg Cheese Burger', 150, '15 mins', 'Veg burger with cheese slice'],
+      ['Chicken Burger', 180, '20 mins', 'Crispy chicken patty burger']
+  ],
+  'Pasta': [
+      ['Red Sauce Pasta', 200, '20 mins', 'Pasta in tangy tomato sauce'],
+      ['White Sauce Pasta', 300, '20 mins', 'Pasta in creamy white sauce'],
+      ['Mixed Sauce Pasta', 320, '20 mins', 'Pasta in pink sauce']
+  ],
+  'Momos': [
+      ['Veg Steamed Momos', 160, '15 mins', 'Steamed dumplings with veg filling'],
+      ['Veg Fried Momos', 180, '20 mins', 'Fried crispy momos'],
+      ['Chicken Steamed Momos', 200, '20 mins', 'Steamed dumplings with chicken'],
+      ['Chicken Fried Momos', 220, '20 mins', 'Fried chicken momos']
+  ],
+  'Pizza': [
+      ['Margherita Pizza', 200, '20 mins', 'Classic cheese and tomato pizza'],
+      ['Veggie Delight Pizza', 280, '25 mins', 'Pizza loaded with vegetables'],
+      ['Paneer Pizza', 320, '25 mins', 'Pizza topped with spiced paneer']
+  ],
+  'Breads': [
+      ['Butter Naan', 60, '5 mins', 'Leavened flatbread with butter'],
+      ['Garlic Naan', 80, '5 mins', 'Naan topped with garlic and butter'],
+      ['Tandoori Roti', 30, '5 mins', 'Crispy whole wheat flatbread']
+  ],
+  'Stay': [
+      ['Room - Accommodates up to 3', 1800, 'N/A', '1 Double Bed | Attached Washroom | Cozy & Comfortable (4 Available)'],
+      ['Room - Accommodates up to 8', 3500, 'N/A', '2 Double Beds | Attached Bathroom | Spacious & Family Friendly (2 Available)']
   ]
 };
 
-const buildMenu = () => {
+// Mapping logic to link menu items to ingredients
+const getRecipeIngredients = (itemName: string, category: Category): string[] => {
+    const lowerName = itemName.toLowerCase();
+    const ids: string[] = [];
+
+    // Basic mapping heuristics
+    if (category.includes('Beverages') || category.includes('Shakes')) {
+        if (lowerName.includes('coffee') || lowerName.includes('shake') || lowerName.includes('tea') || lowerName.includes('lassi')) ids.push('ing_milk', 'ing_sugar');
+        if (lowerName.includes('chocolate')) ids.push('ing_chocolate');
+    }
+    if (category === 'Maggi') ids.push('ing_maggi');
+    if (category === 'Eggs' || lowerName.includes('egg')) ids.push('ing_egg', 'ing_oil', 'ing_onion');
+    if (lowerName.includes('paneer')) ids.push('ing_paneer');
+    if (lowerName.includes('chicken')) ids.push('ing_chicken');
+    if (lowerName.includes('mutton')) ids.push('ing_mutton');
+    if (lowerName.includes('cheese') || lowerName.includes('pizza')) ids.push('ing_cheese');
+    if (lowerName.includes('sandwich') || lowerName.includes('toast') || lowerName.includes('burger')) ids.push('ing_bread', 'ing_butter');
+    if (lowerName.includes('paratha') || lowerName.includes('roti') || lowerName.includes('naan')) ids.push('ing_flour', 'ing_butter');
+    if (category === 'Rice' || category === 'Noodles' || lowerName.includes('fried rice')) {
+        if (lowerName.includes('rice')) ids.push('ing_rice');
+        if (lowerName.includes('noodles')) ids.push('ing_noodles');
+        ids.push('ing_oil', 'ing_onion', 'ing_capsicum');
+    }
+    if (category === 'Main Course' || category === 'Non-Veg Main') ids.push('ing_onion', 'ing_tomato', 'ing_oil', 'ing_ginger', 'ing_garlic');
+    
+    return [...new Set(ids)]; // Remove duplicates
+}
+
+const buildMenu = (): MenuItem[] => {
   const menu: MenuItem[] = [];
-  
-  // Stay Items
-  RAW_MENU_DATA.stay.forEach(category => {
-    category.items.forEach(item => {
-      const [name, price, prepTime, description] = item as [string, number, PrepTime, string];
-      menu.push({
-        id: generateMenuId(),
-        name,
-        category: category.cat,
-        price,
-        isVeg: true, // Rooms are conceptually neutral
-        prepTime,
-        available: true,
-        description
-      });
-    });
-  });
+  let idCounter = 1;
 
-  // Veg Items
-  RAW_MENU_DATA.veg.forEach(category => {
-    category.items.forEach(item => {
-       // Check if description exists in the array, otherwise use default
-       let name, price, prepTime, description;
-       if (item.length === 4) {
-           [name, price, prepTime, description] = item as [string, number, PrepTime, string];
-       } else {
-           [name, price, prepTime] = item as [string, number, PrepTime];
-           description = "A delicious blend of flavors";
-       }
+  (Object.keys(RAW_MENU_DATA) as Category[]).forEach(category => {
+    RAW_MENU_DATA[category]?.forEach(item => {
       menu.push({
-        id: generateMenuId(),
-        name,
-        category: category.cat,
-        price,
-        isVeg: true,
-        prepTime,
+        name: item[0],
+        price: item[1],
+        category: category,
+        isVeg: !['Non-Veg Main', 'Mutton', 'Eggs', 'Chicken', 'Fish'].includes(category) && 
+               !item[0].toLowerCase().includes('chicken') && 
+               !item[0].toLowerCase().includes('egg') &&
+               !item[0].toLowerCase().includes('mutton'),
         available: true,
-        description
-      });
-    });
-  });
-
-  // Non-Veg Items
-  RAW_MENU_DATA.nonveg.forEach(category => {
-    category.items.forEach(item => {
-       let name, price, prepTime, description;
-       if (item.length === 4) {
-           [name, price, prepTime, description] = item as [string, number, PrepTime, string];
-       } else {
-           [name, price, prepTime] = item as [string, number, PrepTime];
-           description = "A delicious blend of flavors";
-       }
-      menu.push({
-        id: generateMenuId(),
-        name,
-        category: category.cat,
-        price,
-        isVeg: false,
-        prepTime,
-        available: true,
-        description
+        description: item[3] || 'A delicious blend of flavors',
+        prepTime: item[2] ? parseInt(item[2]) : 15,
+        id: `item_${idCounter++}`,
+        requiredIngredients: getRecipeIngredients(item[0], category)
       });
     });
   });
@@ -386,150 +404,151 @@ const buildMenu = () => {
   return menu;
 };
 
-const INITIAL_MENU = buildMenu();
+// --- Utilities ---
+
+const generateCSV = (data: any[], filename: string) => {
+  if (!data.length) return;
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => headers.map(fieldName => JSON.stringify(row[fieldName], (key, value) => value === null ? '' : value)).join(','))
+  ].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const parseMenuCSV = (csvText: string): Partial<MenuItem>[] => {
+    const lines = csvText.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const items: Partial<MenuItem>[] = [];
+
+    for(let i=1; i<lines.length; i++) {
+        if(!lines[i].trim()) continue;
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const item: any = {};
+        headers.forEach((h, index) => {
+            if (h === 'price' || h === 'prepTime') item[h] = parseFloat(values[index]);
+            else if (h === 'available' || h === 'isVeg') item[h] = values[index].toLowerCase() === 'true';
+            else item[h] = values[index];
+        });
+        items.push(item);
+    }
+    return items;
+};
+
+const getCategoryTheme = (category: string) => {
+    if (category === 'Stay') return '#FFFFFF'; // White
+    if (category.includes('Non-Veg') || category.includes('Chicken') || category.includes('Mutton') || category.includes('Momos')) return '#FF00FF'; // Bright Magenta
+    if (category === 'Eggs') return '#FFFF00'; // Bright Yellow
+    if (category.includes('Beverages (Hot)') || category.includes('Coffee') || category.includes('Tea')) return '#FF9100'; // Bright Amber
+    if (category.includes('Beverages') || category.includes('Mojito') || category.includes('Cold')) return '#00E5FF'; // Bright Cyan
+    if (category.includes('Paneer') || category.includes('Veg') || category.includes('Salad') || category.includes('Raita')) return '#00FF00'; // Bright Green
+    if (category === 'Burgers' || category === 'Fries' || category === 'Pizza' || category === 'Pasta') return '#FF5500'; // Bright Orange
+    if (category === 'Desserts' || category.includes('Shake')) return '#FF0099'; // Bright Pink
+    if (category === 'Maggi' || category === 'Noodles') return '#FFFF00'; // Bright Yellow
+    if (category === 'Rice' || category === 'Breads' || category === 'Tandoor') return '#FF3333'; // Bright Red
+    return '#00E5FF'; // Default Cyan
+};
+
+const getCategoryIcon = (category: string) => {
+    if (category === 'Stay') return <Bed size={20} />;
+    if (category.includes('Beverages (Hot)')) return <Coffee size={20} />;
+    if (category.includes('Beverages')) return <GlassWater size={20} />;
+    if (category === 'Burgers') return <div className="font-bold text-xs">🍔</div>;
+    if (category === 'Pizza') return <Pizza size={20} />;
+    if (category === 'Pasta') return <div className="font-bold text-xs">🍝</div>;
+    if (category === 'Fries') return <div className="font-bold text-xs">🍟</div>;
+    if (category === 'Momos') return <div className="font-bold text-xs">🥟</div>;
+    if (category === 'Desserts' || category.includes('Shake')) return <Cookie size={20} />;
+    if (category === 'Salad') return <Carrot size={20} />;
+    if (category === 'Eggs') return <Egg size={20} />;
+    if (category === 'Maggi' || category === 'Noodles') return <div className="font-bold text-xs">🍜</div>;
+    if (category.includes('Rice')) return <div className="font-bold text-xs">🍚</div>;
+    if (category.includes('Breads')) return <Croissant size={20} />;
+    if (category.includes('Non-Veg') || category.includes('Chicken') || category.includes('Mutton')) return <Drumstick size={20} />;
+    if (category === 'Soups') return <Soup size={20} />;
+    if (category === 'Chinese') return <div className="font-bold text-xs">🥡</div>;
+    if (category === 'Tandoor') return <Flame size={20} />;
+    return <UtensilsCrossed size={20} />;
+};
+
 
 // --- Components ---
 
-const ScrollToTop = () => {
-  const [isVisible, setIsVisible] = useState(false);
+const LoginView = ({ onLogin, onBack }: { onLogin: (type: 'kitchen' | 'admin', save: boolean) => void, onBack: () => void }) => {
+    const [id, setId] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [rememberMe, setRememberMe] = useState(true);
 
-  const toggleVisibility = () => {
-    if (window.pageYOffset > 300) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  };
+    const handleLogin = () => {
+        if (id === 'skylarkcafe' && password === 'kitchen123') {
+            onLogin('kitchen', rememberMe);
+        } else if (id === 'skylark' && password === 'sanskar321') {
+            onLogin('admin', rememberMe);
+        } else {
+            setError('Invalid Credentials');
+        }
+    };
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', toggleVisibility);
-    return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
-
-  return (
-    <>
-      {isVisible && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-cyan-500/80 text-black shadow-lg shadow-cyan-500/50 hover:bg-cyan-400 transition-all duration-300 animate-fade-in"
-        >
-          <ArrowUp size={24} />
-        </button>
-      )}
-    </>
-  );
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+            <div className="bg-zinc-900 p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md relative">
+                <button onClick={onBack} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                    <X size={24} />
+                </button>
+                <h2 className="text-3xl font-bold text-white mb-6 text-center">Secure Login</h2>
+                {error && <p className="text-red-500 text-center mb-4 bg-red-500/10 p-2 rounded">{error}</p>}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-gray-400 text-sm mb-2">User ID</label>
+                        <input 
+                            type="text" 
+                            value={id} 
+                            onChange={e => setId(e.target.value)}
+                            className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-cyan-500 focus:outline-none"
+                            placeholder="Enter ID"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-gray-400 text-sm mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)}
+                            className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-cyan-500 focus:outline-none"
+                            placeholder="Enter Password"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input 
+                            type="checkbox" 
+                            id="remember" 
+                            checked={rememberMe} 
+                            onChange={e => setRememberMe(e.target.checked)}
+                            className="w-4 h-4 accent-cyan-500"
+                        />
+                        <label htmlFor="remember" className="text-gray-400 text-sm cursor-pointer select-none">Remember Me</label>
+                    </div>
+                    <button 
+                        onClick={handleLogin}
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-lg transition-colors mt-4 shadow-[0_0_15px_rgba(6,182,212,0.5)]"
+                    >
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
-const Toast = ({ message, visible }: { message: string; visible: boolean }) => (
-    <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="bg-green-500/90 backdrop-blur-md text-black px-6 py-3 rounded-full shadow-lg shadow-green-500/30 font-semibold flex items-center gap-2">
-            <CheckCircleIcon size={20} />
-            {message}
-        </div>
-    </div>
-);
-
-const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => {
-  const vegItems = menu.filter(i => i.isVeg && i.category !== 'Stay');
-  const nonVegItems = menu.filter(i => !i.isVeg && i.category !== 'Stay');
-
-  const groupByCategory = (items: MenuItem[]) => {
-    const grouped: { [key: string]: MenuItem[] } = {};
-    items.forEach(item => {
-      if (!grouped[item.category]) grouped[item.category] = [];
-      grouped[item.category].push(item);
-    });
-    return grouped;
-  };
-
-  const vegGrouped = groupByCategory(vegItems);
-  const nonVegGrouped = groupByCategory(nonVegItems);
-
-  return (
-    <div className="min-h-screen bg-[conic-gradient(at_center,_var(--tw-gradient-stops))] from-indigo-950 via-purple-950 to-black text-white p-8 print:p-0 print:bg-white print:text-black">
-      <style>{`
-        @media print {
-          @page { size: landscape; margin: 0.5cm; }
-          body { -webkit-print-color-adjust: exact; }
-          .no-print { display: none; }
-          .print-layout { column-count: 4; column-gap: 1rem; }
-        }
-        .mandala-bg {
-            background-image: radial-gradient(circle at center, transparent 0%, #000 100%), repeating-conic-gradient(from 0deg, #4c1d95 0deg 10deg, #2e1065 10deg 20deg);
-            opacity: 0.2;
-        }
-      `}</style>
-
-      <div className="fixed inset-0 mandala-bg pointer-events-none print:hidden"></div>
-
-      <div className="relative z-10 max-w-[297mm] mx-auto">
-        <div className="text-center mb-8 print:mb-4">
-            <div className="flex items-center justify-center gap-3 mb-2">
-                <h1 className="text-5xl font-bold font-serif tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 print:text-black">SKYLARK CAFÉ</h1>
-            </div>
-          <p className="text-xl text-cyan-300 tracking-[0.2em] uppercase text-shadow-sm print:text-gray-600">Kasol | Himachal Pradesh</p>
-        </div>
-
-        <div className="print-layout columns-1 md:columns-3 lg:columns-4 gap-6 space-y-6">
-          {/* Veg Section */}
-          <div className="break-inside-avoid mb-6">
-            <h2 className="text-2xl font-bold text-green-400 border-b-2 border-green-500/50 pb-2 mb-4 uppercase tracking-widest print:text-green-700">Vegetarian</h2>
-          </div>
-          
-          {Object.entries(vegGrouped).map(([category, items]) => (
-            <div key={category} className="break-inside-avoid mb-6 bg-white/5 p-4 rounded-lg backdrop-blur-sm border border-white/10 print:bg-transparent print:border-none print:p-0">
-              <h3 className="text-lg font-bold text-yellow-400 mb-3 uppercase border-l-4 border-yellow-500 pl-2 print:text-black">{category}</h3>
-              <ul className="space-y-1">
-                {items.map(item => (
-                  <li key={item.id} className="flex justify-between text-sm group">
-                    <span className="text-gray-200 font-medium group-hover:text-white print:text-gray-800">{item.name}</span>
-                    <span className="text-cyan-300 font-bold print:text-black">₹{item.price}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          {/* Non-Veg Section */}
-          <div className="break-inside-avoid mb-6 mt-8">
-            <h2 className="text-2xl font-bold text-red-400 border-b-2 border-red-500/50 pb-2 mb-4 uppercase tracking-widest print:text-red-700">Non-Vegetarian</h2>
-          </div>
-
-          {Object.entries(nonVegGrouped).map(([category, items]) => (
-            <div key={category} className="break-inside-avoid mb-6 bg-white/5 p-4 rounded-lg backdrop-blur-sm border border-white/10 print:bg-transparent print:border-none print:p-0">
-              <h3 className="text-lg font-bold text-orange-400 mb-3 uppercase border-l-4 border-orange-500 pl-2 print:text-black">{category}</h3>
-              <ul className="space-y-1">
-                {items.map(item => (
-                  <li key={item.id} className="flex justify-between text-sm group">
-                    <span className="text-gray-200 font-medium group-hover:text-white print:text-gray-800">{item.name}</span>
-                    <span className="text-cyan-300 font-bold print:text-black">₹{item.price}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const PlaceOrderModal = ({ 
-    isOpen, 
-    onClose, 
-    onSubmit 
-}: { 
-    isOpen: boolean; 
-    onClose: () => void; 
-    onSubmit: (info: CustomerInfo) => void 
-}) => {
+const PlaceOrderModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (info: CustomerInfo) => void }) => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [serviceType, setServiceType] = useState<ServiceType>('Dine-in');
@@ -537,496 +556,1261 @@ const PlaceOrderModal = ({
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = () => {
+        if (!name || !phone) return alert('Please fill Name and Phone');
+        if (serviceType === 'Dine-in' && !tableNumber) return alert('Please enter Table Number');
         onSubmit({ name, phone, serviceType, tableNumber: serviceType === 'Dine-in' ? tableNumber : undefined });
         onClose();
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl shadow-cyan-500/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-white">Complete Your Order</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={24} /></button>
+                    <h2 className="text-2xl font-bold text-white">Place Order</h2>
+                    <button onClick={onClose}><X className="text-gray-400" /></button>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">Name</label>
-                        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 outline-none" placeholder="Enter your name" />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">Phone Number</label>
-                        <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 outline-none" placeholder="Enter phone number" />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-400 mb-1">Service Type</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {(['Dine-in', 'Takeaway', 'Delivery'] as ServiceType[]).map(type => (
-                                <button
-                                    type="button"
-                                    key={type}
-                                    onClick={() => setServiceType(type)}
-                                    className={`p-2 rounded-lg text-sm font-medium transition-all ${serviceType === type ? 'bg-cyan-500 text-black' : 'bg-white/5 text-gray-300 hover:bg-white/10'}`}
-                                >
-                                    {type}
-                                </button>
-                            ))}
-                        </div>
+                <div className="space-y-4">
+                    <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white" />
+                    <input type="tel" placeholder="Phone Number" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white" />
+                    <div className="grid grid-cols-3 gap-2">
+                        {(['Dine-in', 'Takeaway', 'Delivery'] as ServiceType[]).map(type => (
+                            <button key={type} onClick={() => setServiceType(type)} className={`p-2 rounded-lg text-sm font-medium border ${serviceType === type ? 'bg-cyan-500 text-black border-cyan-500' : 'bg-transparent text-gray-400 border-zinc-700'}`}>
+                                {type}
+                            </button>
+                        ))}
                     </div>
                     {serviceType === 'Dine-in' && (
-                        <div>
-                            <label className="block text-sm text-gray-400 mb-1">Table Number</label>
-                            <input required type="text" value={tableNumber} onChange={e => setTableNumber(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-cyan-500 outline-none" placeholder="e.g. T-4" />
-                        </div>
+                        <input type="text" placeholder="Table Number" value={tableNumber} onChange={e => setTableNumber(e.target.value)} className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white" />
                     )}
-                    <button type="submit" className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-cyan-500/30 mt-4">
-                        Confirm Order
-                    </button>
-                </form>
+                    <button onClick={handleSubmit} className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(34,197,94,0.4)]">Confirm Order</button>
+                </div>
             </div>
         </div>
     );
 };
 
-const CustomerView = React.memo(({ 
-  menu, 
-  cart, 
-  addToCart, 
-  removeFromCart, 
-  updateQuantity, 
-  clearCart, 
-  placeOrder, 
-  onNavigate,
-  toggleVegMode,
-  isVegMode,
-  onLogin
-}: { 
-  menu: MenuItem[]; 
-  cart: CartItem[]; 
-  addToCart: (item: MenuItem) => void; 
-  removeFromCart: (itemId: string) => void;
-  updateQuantity: (itemId: string, delta: number) => void;
-  clearCart: () => void;
-  placeOrder: (info: CustomerInfo) => void;
-  onNavigate: (view: 'kitchen' | 'admin') => void;
-  toggleVegMode: () => void;
-  isVegMode: boolean;
-  onLogin: (type: 'chef' | 'admin') => void;
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'price' | 'time'>('price');
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>('');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+const OrderConfirmation = ({ orderId, estimatedTime, status, onBack }: { orderId: string, estimatedTime: number, status: Order['status'], onBack: () => void }) => {
+    const getStatusStep = () => {
+        switch(status) {
+            case 'pending': return 1;
+            case 'preparing': return 2;
+            case 'ready': return 3;
+            case 'completed': return 4;
+            default: return 0;
+        }
+    };
+    const step = getStatusStep();
 
-  const scrollSidebar = (direction: 'up' | 'down') => {
-    if (sidebarRef.current) {
-      const scrollAmount = 300;
-      sidebarRef.current.scrollBy({
-        top: direction === 'up' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
+    return (
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-8">
+            <div className="bg-green-500/20 p-6 rounded-full mb-4 animate-pulse">
+                <CheckCircle size={64} className="text-green-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-white">Order Placed!</h2>
+            <p className="text-gray-400 text-lg">Order ID: <span className="text-cyan-400 font-mono">#{orderId.slice(-4)}</span></p>
+            
+            <div className="w-full max-w-md bg-zinc-800 rounded-xl p-6 border border-white/5">
+                <div className="flex justify-between text-sm text-gray-400 mb-2">
+                    <span>Status</span>
+                    <span className="text-white font-bold capitalize">{status}</span>
+                </div>
+                <div className="w-full bg-black h-2 rounded-full overflow-hidden mb-6">
+                    <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000"
+                        style={{ width: `${step * 25}%` }}
+                    />
+                </div>
+                <p className="text-xl font-bold text-white mb-2">
+                    {status === 'ready' ? 'Your Order is Ready!' : `Estimated time: ${estimatedTime} mins`}
+                </p>
+                <p className="text-sm text-gray-500">
+                    {status === 'pending' && 'Waiting for confirmation...'}
+                    {status === 'preparing' && 'Chef is preparing your food...'}
+                    {status === 'ready' && 'Please collect your order!'}
+                    {status === 'completed' && 'Order completed. Enjoy!'}
+                </p>
+            </div>
 
-  // Scroll Spy
-  useEffect(() => {
-      const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                  setActiveCategory(entry.target.id.replace('cat-', ''));
-              }
-          });
-      }, { rootMargin: '-20% 0px -60% 0px' });
-
-      document.querySelectorAll('section[id^="cat-"]').forEach(section => {
-          observer.observe(section);
-      });
-
-      return () => observer.disconnect();
-  }, [menu]);
-
-  const categories = useMemo(() => Array.from(new Set(menu.map(item => item.category))), [menu]);
-
-  const getCategoryIcon = (cat: string) => {
-    if (cat.includes('Hot')) return <Coffee size={28} strokeWidth={1} />;
-    if (cat.includes('Cold') || cat.includes('Beverages')) return <GlassWater size={28} strokeWidth={1} />;
-    if (cat.includes('Burger')) return <Sandwich size={28} strokeWidth={1} />;
-    if (cat.includes('Pizza')) return <Pizza size={28} strokeWidth={1} />;
-    if (cat.includes('Sandwich') || cat.includes('Toast')) return <AlignLeft size={28} strokeWidth={1} />;
-    if (cat.includes('Fries')) return <Crop size={28} strokeWidth={1} />;
-    if (cat.includes('Momos')) return <CircleDot size={28} strokeWidth={1} />;
-    if (cat.includes('Maggi') || cat.includes('Noodles') || cat.includes('Pasta')) return <Utensils size={28} strokeWidth={1} />;
-    if (cat.includes('Rice') || cat.includes('Biryani')) return <Box size={28} strokeWidth={1} />;
-    if (cat.includes('Main Course')) return <ChefHat size={28} strokeWidth={1} />;
-    if (cat.includes('Dessert') || cat.includes('Shake')) return <IceCream size={28} strokeWidth={1} />;
-    if (cat.includes('Tandoor')) return <Flame size={28} strokeWidth={1} />;
-    if (cat.includes('Breakfast')) return <Croissant size={28} strokeWidth={1} />;
-    if (cat.includes('Egg')) return <Egg size={28} strokeWidth={1} />;
-    if (cat.includes('Salad')) return <Carrot size={28} strokeWidth={1} />;
-    if (cat.includes('Cookie') || cat.includes('Biscuits')) return <Cookie size={28} strokeWidth={1} />;
-    if (cat.includes('Soup')) return <Soup size={28} strokeWidth={1} />;
-    if (cat.includes('Stay')) return <BedDouble size={28} strokeWidth={1} />;
-    return <Utensils size={28} strokeWidth={1} />;
-  };
-  
-  const getCategoryTheme = (cat: string) => {
-      if (cat.includes('Hot')) return '#F59E0B'; // Amber
-      if (cat.includes('Cold') || cat.includes('Beverages')) return '#06b6d4'; // Cyan
-      if (cat.includes('Burger')) return '#F97316'; // Orange
-      if (cat.includes('Pizza')) return '#EF4444'; // Red
-      if (cat.includes('Fries')) return '#EAB308'; // Yellow
-      if (cat.includes('Green') || cat.includes('Salad') || cat.includes('Veg')) return '#22C55E'; // Green
-      if (cat.includes('Non') || cat.includes('Chicken') || cat.includes('Mutton')) return '#EF4444'; // Red
-      if (cat.includes('Dessert') || cat.includes('Shake')) return '#EC4899'; // Pink
-      if (cat.includes('Stay')) return '#A855F7'; // Purple
-      return '#8B5CF6'; // Violet default
-  };
-
-  const groupedCategories = useMemo(() => {
-      // Sort logic: Stay -> Hot -> Cold -> Quick -> Medium -> Slow
-      const priorityOrder = ['Stay', 'Beverages (Hot)', 'Beverages (Cold)', 'Maggi', 'Momos', 'Fries', 'Sandwich', 'Burgers', 'Pasta', 'Pizza', 'Breakfast', 'Egg Dishes', 'Rice', 'Noodles', 'Main Course', 'Tandoor', 'Chinese', 'Soup', 'Salad', 'Raita', 'Shakes/Lassi', 'Desserts'];
-      
-      const sorted = [...categories].sort((a, b) => {
-          const idxA = priorityOrder.indexOf(a);
-          const idxB = priorityOrder.indexOf(b);
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          if (idxA !== -1) return -1;
-          if (idxB !== -1) return 1;
-          return 0;
-      });
-
-      return {
-          'Stay': sorted.filter(c => c === 'Stay'),
-          'Drinks': sorted.filter(c => c.includes('Beverages') || c.includes('Shake') || c.includes('Lassi')),
-          'Fast Food': sorted.filter(c => ['Maggi', 'Sandwich', 'Burgers', 'Pasta', 'Pizza', 'Momos', 'Fries'].includes(c)),
-          'Main Course': sorted.filter(c => !['Stay', 'Beverages (Hot)', 'Beverages (Cold)', 'Maggi', 'Sandwich', 'Burgers', 'Pasta', 'Pizza', 'Momos', 'Fries', 'Shakes/Lassi'].includes(c))
-      };
-  }, [categories]);
-
-  const sortedMenu = useMemo(() => {
-    let processed = menu.filter(item => 
-      (item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       item.category.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (!isVegMode || item.isVeg)
-    );
-
-    if (sortBy === 'price') {
-      processed.sort((a, b) => a.price - b.price);
-    } else {
-      const timeWeight = { 'Quick': 1, 'Medium': 2, 'Slow': 3 };
-      processed.sort((a, b) => timeWeight[a.prepTime] - timeWeight[b.prepTime]);
-    }
-
-    return processed;
-  }, [menu, searchTerm, sortBy, isVegMode]);
-
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-  const scrollToCategory = (cat: string) => {
-    const element = document.getElementById(`cat-${cat}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsSidebarOpen(false);
-    }
-  };
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-black text-white font-sans selection:bg-cyan-500/30">
-       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { bg: #000; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
-      `}</style>
-      
-      {/* Mobile Drawer Overlay */}
-      {isSidebarOpen && (
-          <div className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar Navigation */}
-      <div className={`fixed md:relative z-50 w-72 h-full bg-zinc-950/95 border-r border-white/5 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} flex flex-col`}>
-        
-        <div className="p-6 border-b border-white/5 flex-none">
-           <h1 className="text-3xl font-bold font-serif tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-1">Skylark</h1>
-           <p className="text-xs text-gray-500 tracking-[0.3em] uppercase">Café & Stay</p>
+            <button onClick={onBack} className="bg-zinc-800 hover:bg-zinc-700 text-white px-8 py-3 rounded-xl border border-white/10 transition-all">
+                Back to Menu
+            </button>
         </div>
+    );
+};
 
-        {/* Sidebar Scroll Up Button */}
-        <button 
-            onClick={() => scrollSidebar('up')}
-            className="w-full flex items-center justify-center p-2 text-cyan-400 hover:bg-white/5 hover:text-cyan-300 transition-colors border-b border-white/5 flex-none"
-        >
-            <ChevronUp size={20} />
-        </button>
 
-        <div ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-            {Object.entries(groupedCategories).map(([group, cats]) => (
-                cats.length > 0 && (
-                    <div key={group}>
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 pl-2">{group}</h3>
-                        <div className="space-y-2">
-                            {cats.map(cat => {
-                                const color = getCategoryTheme(cat);
-                                const isActive = activeCategory === cat;
-                                return (
-                                    <button
-                                        key={cat}
-                                        onClick={() => scrollToCategory(cat)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden border ${isActive ? `bg-[${color}]/10 border-[${color}] shadow-[0_0_15px_${color}40]` : 'bg-zinc-900/50 border-white/5 hover:border-white/20'}`}
-                                        style={{ borderColor: isActive ? color : '' }}
-                                    >
-                                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-[${color}]`} />
-                                        <div className={`text-[${color}] p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_10px_${color}20]`} style={{ color: color }}>
-                                            {getCategoryIcon(cat)}
+const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity, onPlaceOrder, onNavigate, activeCategory, setActiveCategory }: any) => {
+    const [sortBy, setSortBy] = useState<'price' | 'time'>('price');
+    const [vegOnly, setVegOnly] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+
+    const groupedCategories = useMemo(() => ({
+        'Stay': ['Stay'],
+        'Drinks': ['Beverages (Hot)', 'Beverages (Cold)', 'Shakes/Lassi'],
+        'Fast Food': ['Maggi', 'Burgers', 'Pasta', 'Pizza', 'Momos', 'Fries', 'Salad', 'Soups', 'Eggs'],
+        'Main Course': ['Main Course', 'Non-Veg Main', 'Mutton', 'Tandoor', 'Rice', 'Noodles', 'Chinese', 'Breads', 'Raita', 'Desserts']
+    }), []);
+
+    const scrollSidebar = (amount: number) => {
+        sidebarRef.current?.scrollBy({ top: amount, behavior: 'smooth' });
+    };
+
+    // Scroll Spy
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    setActiveCategory(entry.target.id.replace('cat-', ''));
+                }
+            });
+        }, { rootMargin: '-100px 0px -50% 0px' });
+
+        document.querySelectorAll('[id^="cat-"]').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
+    }, [setActiveCategory]);
+
+    const sortedMenu = useMemo(() => {
+        let filtered = menu.filter((item: MenuItem) => 
+            item.available && 
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            (!vegOnly || item.isVeg)
+        );
+
+        // Sorting logic
+        if (sortBy === 'price') {
+            filtered.sort((a: MenuItem, b: MenuItem) => a.price - b.price);
+        } else {
+            // Sort by Time: Quick (<=10) -> Medium (<=20) -> Slow (>20)
+            filtered.sort((a: MenuItem, b: MenuItem) => a.prepTime - b.prepTime);
+        }
+
+        // Group items by category
+        const grouped: {[key: string]: MenuItem[]} = {};
+        // Use the predefined order from RAW_MENU_DATA keys + Stay
+        const allCats = [...Object.keys(RAW_MENU_DATA)];
+        
+        allCats.forEach(cat => {
+            const itemsInCat = filtered.filter((i: MenuItem) => i.category === cat);
+            if (itemsInCat.length > 0) grouped[cat] = itemsInCat;
+        });
+        return grouped;
+    }, [menu, searchTerm, sortBy, vegOnly]);
+
+    const scrollToCategory = (cat: string) => {
+        const el = document.getElementById(`cat-${cat}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setIsSidebarOpen(false);
+        }
+    };
+
+    return (
+        <div className="flex h-full bg-black text-white overflow-hidden flex-col md:flex-row">
+            {/* Mobile Header - Only visible on small screens */}
+            <div className="md:hidden flex items-center justify-between p-3 bg-black/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-white bg-zinc-900 rounded-lg border border-white/10">
+                        <Menu size={20} />
+                    </button>
+                    <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Skylark</span>
+                </div>
+                <div className="flex gap-2">
+                    <a href="https://maps.app.goo.gl/NUpz4bEUTTagFVUn9" target="_blank" rel="noreferrer" className="p-2 bg-white/5 rounded-full text-cyan-400 hover:bg-cyan-500/20 transition-colors border border-white/5">
+                        <MapPin size={18} />
+                    </a>
+                    <button onClick={() => onNavigate('kitchen')} className="p-2 bg-white/5 rounded-full text-orange-400 hover:bg-orange-500/20 transition-colors border border-white/5">
+                        <ChefHat size={18} />
+                    </button>
+                    <button onClick={() => onNavigate('admin')} className="p-2 bg-white/5 rounded-full text-purple-400 hover:bg-purple-500/20 transition-colors border border-white/5">
+                        <LayoutDashboard size={18} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Sidebar / Drawer */}
+            <div className={`fixed inset-0 z-50 bg-black/90 backdrop-blur-md transition-transform duration-300 md:relative md:transform-none md:w-72 md:border-r md:border-white/10 flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div className="p-6 hidden md:block">
+                    <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-1">Skylark Café</h1>
+                    <p className="text-xs text-gray-500 tracking-widest">KASOL | HIMACHAL</p>
+                </div>
+
+                <div className="p-4 md:hidden flex justify-between items-center border-b border-white/10">
+                    <span className="font-bold text-lg">Menu Categories</span>
+                    <button onClick={() => setIsSidebarOpen(false)}><X /></button>
+                </div>
+                
+                {/* Scroll UP Button */}
+                <button 
+                    onClick={() => scrollSidebar(-300)} 
+                    className="w-full flex justify-center items-center py-2 bg-black/50 hover:bg-white/5 border-b border-white/5 text-gray-400 hover:text-white transition-colors z-10"
+                >
+                    <ChevronUp size={20} />
+                </button>
+
+                {/* Scrollable Category List */}
+                <div ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+                    {(Object.entries(groupedCategories) as [string, string[]][]).map(([group, cats]) => (
+                        cats.some(cat => sortedMenu[cat]) && (
+                            <div key={group}>
+                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 pl-2">{group}</h3>
+                                <div className="space-y-2">
+                                    {cats.map(cat => {
+                                        const color = getCategoryTheme(cat);
+                                        const isActive = activeCategory === cat;
+                                        return (
+                                            <button
+                                                key={cat}
+                                                onClick={() => scrollToCategory(cat)}
+                                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden border ${isActive ? `bg-[${color}]/10 border-[${color}] shadow-[0_0_15px_${color}40]` : 'bg-zinc-900/50 border-white/5 hover:border-white/20'}`}
+                                                style={{ borderColor: isActive ? color : '' }}
+                                            >
+                                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-[${color}]`} />
+                                                <div className={`text-[${color}] p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_10px_${color}20]`} style={{ color: color }}>
+                                                    {React.cloneElement(getCategoryIcon(cat) as any, { size: 20 })}
+                                                </div>
+                                                <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`}>{cat}</span>
+                                                
+                                                {/* Pop-up Art Icon */}
+                                                <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-20 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 pointer-events-none" style={{ color: color }}>
+                                                   {React.cloneElement(getCategoryIcon(cat) as any, { size: 48 })}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )
+                    ))}
+                </div>
+
+                {/* Scroll DOWN Button */}
+                <button 
+                    onClick={() => scrollSidebar(300)} 
+                    className="w-full flex justify-center items-center py-2 bg-black/50 hover:bg-white/5 border-t border-white/5 text-gray-400 hover:text-white transition-colors z-10"
+                >
+                    <ChevronDown size={20} />
+                </button>
+
+                {/* Sidebar Footer Controls */}
+                <div className="p-4 bg-black border-t border-white/10 space-y-3 z-20">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search menu..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-10 pr-4 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                         <button 
+                            onClick={() => setVegOnly(!vegOnly)}
+                            className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border transition-all ${vegOnly ? 'bg-green-500/20 border-green-500 text-green-400' : 'bg-zinc-900 border-zinc-700 text-gray-400'}`}
+                        >
+                            <Leaf size={14} /> {vegOnly ? 'VEG ONLY' : 'ALL FOOD'}
+                        </button>
+                        <button 
+                            onClick={() => setSortBy(sortBy === 'price' ? 'time' : 'price')}
+                            className="flex-1 bg-zinc-900 border border-zinc-700 hover:border-white/30 text-gray-400 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                        >
+                            {sortBy === 'price' ? <DollarSign size={14} /> : <Clock size={14} />}
+                            {sortBy === 'price' ? 'PRICE' : 'TIME'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative min-h-0 min-w-0 bg-black">
+                {/* Desktop Top Header */}
+                <div className="hidden md:flex justify-between items-center p-6 sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-white/5">
+                    <div className="flex gap-4">
+                        <button onClick={() => scrollToCategory('Stay')} className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold transition-all">Stay</button>
+                        <button onClick={() => scrollToCategory('Maggi')} className="px-6 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-full text-sm font-bold text-cyan-400 transition-all">Café Menu</button>
+                    </div>
+                    <div className="flex gap-3">
+                         <a href="https://maps.app.goo.gl/NUpz4bEUTTagFVUn9" target="_blank" rel="noreferrer" className="p-3 bg-zinc-900 rounded-full hover:scale-110 transition-all border border-white/10 group">
+                            <MapPin size={20} className="text-cyan-400 group-hover:text-cyan-300" />
+                        </a>
+                        <button onClick={() => onNavigate('kitchen')} className="p-3 bg-zinc-900 rounded-full hover:scale-110 transition-all border border-white/10 group">
+                            <ChefHat size={20} className="text-orange-400 group-hover:text-orange-300" />
+                        </button>
+                        <button onClick={() => onNavigate('admin')} className="p-3 bg-zinc-900 rounded-full hover:scale-110 transition-all border border-white/10 group">
+                            <LayoutDashboard size={20} className="text-purple-400 group-hover:text-purple-300" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-4 pb-32 space-y-8">
+                    {Object.entries(sortedMenu).map(([category, items]) => (
+                        <div key={category} id={`cat-${category}`} className="scroll-mt-6">
+                            <h2 className={`text-xl md:text-2xl font-black mb-4 md:mb-6 uppercase tracking-tighter flex items-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 transition-all duration-500 ${activeCategory === category ? 'scale-105 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]' : ''}`}>
+                                {React.cloneElement(getCategoryIcon(category) as any, { size: 24, className: `text-[${getCategoryTheme(category)}]` })}
+                                {category}
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                                {items.map((item: MenuItem) => {
+                                    const themeColor = getCategoryTheme(category);
+                                    return (
+                                        <div key={item.id} 
+                                             className={`group relative bg-transparent border border-white/5 hover:border-[${themeColor}]/50 rounded-2xl p-3 md:p-4 transition-all duration-200 hover:shadow-[0_0_20px_${themeColor}20] min-h-[140px] md:h-44 flex flex-col justify-between overflow-hidden ${!item.available ? 'opacity-50 grayscale pointer-events-none' : ''} ${activeCategory === category ? 'border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)]' : ''}`}>
+                                            
+                                            {/* Neon Pop-up Icon Background */}
+                                            <div className={`absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 pointer-events-none text-[${themeColor}]`} style={{ color: themeColor }}>
+                                                {React.cloneElement(getCategoryIcon(category) as any, { size: 120, strokeWidth: 1 })}
+                                            </div>
+
+                                            <div className="flex justify-between items-start relative z-10">
+                                                <div className="flex gap-2">
+                                                    <div className={`w-3 h-3 rounded-full mt-1 ${item.isVeg ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
+                                                    <div>
+                                                        <h3 className="font-bold text-base md:text-lg leading-tight text-white group-hover:text-cyan-400 transition-colors">{item.name}</h3>
+                                                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{item.description}</p>
+                                                    </div>
+                                                </div>
+                                                {/* ADD Button Top Right */}
+                                                {item.available ? (
+                                                    <button 
+                                                        onClick={() => onAddToCart(item)}
+                                                        className={`p-2 rounded-lg transition-all active:scale-90 active:rotate-3 shadow-lg font-bold text-xs ${item.isVeg ? 'bg-green-500 text-black hover:bg-green-400 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 'bg-red-500 text-white hover:bg-red-400 shadow-[0_0_10px_rgba(239,68,68,0.4)]'}`}
+                                                    >
+                                                        ADD
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-xs font-bold text-red-500 border border-red-500/50 px-2 py-1 rounded bg-red-500/10">SOLD OUT</span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex justify-between items-end mt-3 relative z-10">
+                                                <div className="text-lg md:text-xl font-bold text-white">₹{item.price}</div>
+                                                <div className="text-xs font-mono text-gray-500 flex items-center gap-1">
+                                                    <Clock size={12} /> {item.prepTime}m
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`}>{cat}</span>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Floating Cart Button (Mobile/Desktop) */}
+            {cart.length > 0 && (
+                <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-96 z-50">
+                    <button onClick={onPlaceOrder} className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.4)] flex items-center justify-between hover:scale-105 transition-transform active:scale-95 border border-white/20 backdrop-blur-xl">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-black/30 p-2 rounded-lg font-mono font-bold text-lg">{cart.reduce((a: any, b: any) => a + b.quantity, 0)} Items</div>
+                            <div className="flex flex-col items-start">
+                                <span className="text-xs text-green-100 uppercase font-bold tracking-wider">Total Payable</span>
+                                <span className="text-xl font-black">₹{cart.reduce((a: any, b: any) => a + (b.price * b.quantity), 0)}</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 font-bold bg-white/20 px-4 py-2 rounded-xl">
+                            Place Order <ChevronRight size={18} />
+                        </div>
+                    </button>
+                </div>
+            )}
+
+             {/* Scroll To Top Button */}
+            <ScrollToTop />
+        </div>
+    );
+});
+
+const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockStatus, missingIngredients, ingredients, updateIngredientStatus, onLogout }: any) => {
+    const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+    const [isInvModalOpen, setIsInvModalOpen] = useState(false);
+
+    const pendingOrders = orders.filter((o: Order) => o.status === 'pending');
+    const prepOrders = orders.filter((o: Order) => o.status === 'preparing');
+
+    return (
+        <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900/50">
+                <div className="flex items-center gap-4">
+                    <button onClick={onLogout} className="p-2 bg-zinc-800 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors"><ArrowLeft size={20} /></button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-orange-500 flex items-center gap-2"><ChefHat /> Kitchen Display</h1>
+                        <p className="text-xs text-gray-400">Live Order Management System</p>
+                    </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 w-full md:w-auto">
+                    <div className="flex gap-4 text-sm font-mono">
+                        <span className="text-orange-400">Pending: {pendingOrders.length}</span>
+                        <span className="text-blue-400">Prep: {prepOrders.length}</span>
+                    </div>
+                    <div className="flex gap-2 w-full md:w-auto">
+                         <button onClick={() => setIsInvModalOpen(true)} className="flex-1 md:flex-none px-4 py-2 bg-zinc-800 border border-zinc-700 hover:border-white/30 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                            <Package size={16} /> Ingredients
+                        </button>
+                        <button onClick={() => setIsStockModalOpen(true)} className="flex-1 md:flex-none px-4 py-2 bg-zinc-800 border border-zinc-700 hover:border-white/30 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                            <List size={16} /> Menu Stock
+                        </button>
+                        <button onClick={onLogout} className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                            <LogOut size={16} /> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                {/* NEW ORDERS COLUMN */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-orange-400 sticky top-0 bg-black/90 p-2 z-10 border-b border-orange-500/30">New Orders ({pendingOrders.length})</h2>
+                    {pendingOrders.length === 0 ? (
+                        <div className="text-gray-600 text-center p-8 border border-dashed border-zinc-800 rounded-xl">No pending orders</div>
+                    ) : (
+                        pendingOrders.map((order: Order) => (
+                            <div key={order.id} className="bg-zinc-900 border-l-4 border-orange-500 rounded-r-xl p-4 shadow-lg animate-slide-in">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <span className="text-2xl font-bold text-white">#{order.id.slice(-4)}</span>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            <span className={`text-xs px-2 py-0.5 rounded font-bold ${order.customerInfo.serviceType === 'Dine-in' ? 'bg-blue-500/20 text-blue-400' : order.customerInfo.serviceType === 'Takeaway' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                                {order.customerInfo.serviceType}
+                                            </span>
+                                            {order.customerInfo.tableNumber && <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-white font-mono">Table {order.customerInfo.tableNumber}</span>}
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">{order.customerInfo.name} • {order.customerInfo.phone}</p>
+                                    </div>
+                                    <span className="text-xs font-mono text-gray-500">{order.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <div className="space-y-2 mb-4">
+                                    {order.items.map((item, idx) => {
+                                        // Check for missing ingredients for this item
+                                        const liveItem = menu.find((m: MenuItem) => m.id === item.id);
+                                        const hasMissing = liveItem && liveItem.missingIngredients && liveItem.missingIngredients.length > 0;
                                         
-                                        {/* Pop-up Art Icon */}
-                                        <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-20 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 pointer-events-none" style={{ color: color }}>
-                                           {getCategoryIcon(cat)}
+                                        return (
+                                            <div key={idx} className={`flex justify-between items-center p-2 rounded ${hasMissing ? 'bg-red-500/10 border border-red-500/30' : 'bg-black/30'}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="font-bold text-orange-400 bg-orange-400/10 px-2 rounded">x{item.quantity}</span>
+                                                    <div>
+                                                        <span className={`text-sm ${item.isVeg ? 'text-green-300' : 'text-red-300'}`}>{item.name}</span>
+                                                        {hasMissing && (
+                                                            <p className="text-[10px] text-red-400 font-bold flex items-center gap-1">
+                                                                <AlertCircle size={10} /> Missing: {liveItem.missingIngredients?.map(mid => ingredients.find((i: Ingredient) => i.id === mid)?.name).join(', ')}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <button 
+                                    onClick={() => updateOrderStatus(order.id, 'preparing')}
+                                    className="w-full py-3 bg-orange-500 hover:bg-orange-400 text-black font-bold rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.4)] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Flame size={18} /> Start Cooking
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* IN PROGRESS COLUMN */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-blue-400 sticky top-0 bg-black/90 p-2 z-10 border-b border-blue-500/30">In Progress ({prepOrders.length})</h2>
+                     {prepOrders.length === 0 ? (
+                        <div className="text-gray-600 text-center p-8 border border-dashed border-zinc-800 rounded-xl">No active orders</div>
+                    ) : (
+                        prepOrders.map((order: Order) => (
+                            <div key={order.id} className="bg-zinc-900 border-l-4 border-blue-500 rounded-r-xl p-4 shadow-lg animate-slide-in">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <span className="text-2xl font-bold text-white">#{order.id.slice(-4)}</span>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                             <span className={`text-xs px-2 py-0.5 rounded font-bold ${order.customerInfo.serviceType === 'Dine-in' ? 'bg-blue-500/20 text-blue-400' : order.customerInfo.serviceType === 'Takeaway' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                                {order.customerInfo.serviceType}
+                                            </span>
+                                            {order.customerInfo.tableNumber && <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-white font-mono">Table {order.customerInfo.tableNumber}</span>}
                                         </div>
-                                    </button>
-                                );
-                            })}
+                                    </div>
+                                    <Clock className="text-blue-400 animate-pulse" size={16} />
+                                </div>
+                                <div className="space-y-2 mb-4">
+                                    {order.items.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-gray-300 text-sm">
+                                            <span>{item.quantity}x {item.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button 
+                                    onClick={() => updateOrderStatus(order.id, 'ready')}
+                                    className="w-full py-3 bg-blue-500 hover:bg-blue-400 text-black font-bold rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <CheckCircle size={18} /> Mark Ready
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Modals */}
+            <StockControlModal isOpen={isStockModalOpen} onClose={() => setIsStockModalOpen(false)} menu={menu} onToggle={updateStockStatus} />
+            <IngredientInventoryModal isOpen={isInvModalOpen} onClose={() => setIsInvModalOpen(false)} ingredients={ingredients} onToggle={updateIngredientStatus} />
+        </div>
+    );
+});
+
+const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMenu }: any) => {
+    const [view, setView] = useState<'dashboard' | 'inventory' | 'calendar' | 'menu'>('dashboard');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Calculate Stats
+    const totalRevenue = useMemo(() => orders.filter((o: Order) => o.status === 'completed').reduce((acc: number, curr: Order) => acc + curr.total, 0), [orders]);
+    const completedOrders = useMemo(() => orders.filter((o: Order) => o.status === 'completed').length, [orders]);
+    const activeOrders = useMemo(() => orders.filter((o: Order) => o.status !== 'completed' && o.status !== 'cancelled').length, [orders]);
+    
+    // Daily Stats
+    const today = new Date().toDateString();
+    const todayOrders = useMemo(() => orders.filter((o: Order) => new Date(o.timestamp).toDateString() === today && o.status === 'completed'), [orders, today]);
+    const todayRevenue = useMemo(() => todayOrders.reduce((acc: number, curr: Order) => acc + curr.total, 0), [todayOrders]);
+
+    // Top Items
+    const topItems = useMemo(() => {
+        const counts: {[key: string]: number} = {};
+        orders.forEach((o: Order) => {
+            if(o.status === 'completed') {
+                o.items.forEach((i: CartItem) => {
+                    counts[i.name] = (counts[i.name] || 0) + i.quantity;
+                });
+            }
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    }, [orders]);
+
+    // Filtered Transaction List
+    const filteredOrders = useMemo(() => {
+        return orders
+            .filter((o: Order) => o.id.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerInfo.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a: Order, b: Order) => b.timestamp.getTime() - a.timestamp.getTime());
+    }, [orders, searchTerm]);
+
+    // Handlers for CSV
+    const handleDownloadMenu = () => {
+        const data = menu.map((m: MenuItem) => ({
+            Name: m.name,
+            Category: m.category,
+            Price: m.price,
+            Available: m.available,
+            PrepTime: m.prepTime,
+            IsVeg: m.isVeg,
+            Description: m.description
+        }));
+        generateCSV(data, 'skylark_menu_export.csv');
+    };
+
+    const handleUploadMenu = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const text = evt.target?.result as string;
+            const updates = parseMenuCSV(text);
+            if(updates.length) {
+                // Merge logic would go here, for now we simulate state update via a hypothetical setter passed or reload
+                // In a real app, we would update the 'menu' state with these values matching by name
+                alert(`Parsed ${updates.length} items. Please implement state merge.`);
+            }
+        };
+        reader.readAsText(file);
+    };
+
+
+    const renderContent = () => {
+        switch(view) {
+            case 'inventory': return <InventoryManager />;
+            case 'calendar': return <CalendarPlanner />;
+            case 'menu': return <MenuEditorModal menu={menu} onClose={() => setView('dashboard')} onUpdate={() => {}} />; // Placeholder
+            default: return (
+                <div className="space-y-6">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-zinc-900 p-6 rounded-2xl border border-purple-500/20 shadow-lg">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
+                                    <h3 className="text-3xl font-bold text-white">₹{totalRevenue.toLocaleString()}</h3>
+                                </div>
+                                <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400"><DollarSign /></div>
+                            </div>
+                        </div>
+                        <div className="bg-zinc-900 p-6 rounded-2xl border border-blue-500/20 shadow-lg">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-gray-400 text-sm mb-1">Total Orders</p>
+                                    <h3 className="text-3xl font-bold text-white">{completedOrders}</h3>
+                                </div>
+                                <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400"><ClipboardList /></div>
+                            </div>
+                        </div>
+                        <div className="bg-zinc-900 p-6 rounded-2xl border border-orange-500/20 shadow-lg">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-gray-400 text-sm mb-1">Active Now</p>
+                                    <h3 className="text-3xl font-bold text-white">{activeOrders}</h3>
+                                </div>
+                                <div className="p-3 bg-orange-500/20 rounded-xl text-orange-400"><Activity /></div>
+                            </div>
                         </div>
                     </div>
-                )
+
+                    {/* Dashboard Summary */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                         <div className="bg-zinc-900 p-6 rounded-2xl border border-white/5">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><TrendingUp className="text-green-400" /> Daily Snapshot</h3>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center p-4 bg-black rounded-xl">
+                                    <span className="text-gray-400">Today's Revenue</span>
+                                    <span className="text-xl font-bold text-green-400">₹{todayRevenue.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-4 bg-black rounded-xl">
+                                    <span className="text-gray-400">Today's Orders</span>
+                                    <span className="text-xl font-bold text-blue-400">{todayOrders.length}</span>
+                                </div>
+                            </div>
+                         </div>
+                         <div className="bg-zinc-900 p-6 rounded-2xl border border-white/5">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Star className="text-yellow-400" /> Top Selling Items</h3>
+                             <div className="space-y-3">
+                                {topItems.map(([name, count], idx) => (
+                                    <div key={name} className="flex justify-between items-center border-b border-white/5 pb-2 last:border-0">
+                                        <span className="flex items-center gap-3">
+                                            <span className="text-xs font-mono text-gray-500">0{idx+1}</span>
+                                            <span className="text-gray-300">{name}</span>
+                                        </span>
+                                        <span className="font-bold text-white">{count} sold</span>
+                                    </div>
+                                ))}
+                                {topItems.length === 0 && <p className="text-gray-500 text-sm">No data yet</p>}
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* Ready for Service Section */}
+                    {orders.filter((o: Order) => o.status === 'ready').length > 0 && (
+                        <div className="bg-blue-900/10 border border-blue-500/30 rounded-2xl p-6">
+                            <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2"><UtensilsCrossed /> Ready for Service</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {orders.filter((o: Order) => o.status === 'ready').map((order: Order) => (
+                                    <div key={order.id} className="bg-black p-4 rounded-xl border border-blue-500/20 flex flex-col justify-between h-full">
+                                        <div>
+                                            <div className="flex justify-between mb-2">
+                                                <span className="font-bold text-white">#{order.id.slice(-4)}</span>
+                                                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{order.customerInfo.serviceType}</span>
+                                            </div>
+                                            <p className="text-sm text-gray-400 mb-2">{order.customerInfo.name}</p>
+                                            <ul className="text-xs text-gray-500 space-y-1 mb-4">
+                                                {order.items.map((i, idx) => <li key={idx}>{i.quantity}x {i.name}</li>)}
+                                            </ul>
+                                        </div>
+                                        <button 
+                                            onClick={() => updateOrderStatus(order.id, 'completed')}
+                                            className="w-full py-2 bg-blue-500 hover:bg-blue-400 text-black font-bold rounded transition-colors"
+                                        >
+                                            Complete Order
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Recent Transactions */}
+                    <div className="bg-zinc-900 rounded-2xl border border-white/5 overflow-hidden">
+                        <div className="p-6 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <h3 className="text-lg font-bold text-white">Recent Transactions</h3>
+                             <div className="relative w-full md:w-64">
+                                <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
+                                <input
+                                    type="text"
+                                    placeholder="Search Name or Order ID"
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="w-full bg-black border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-purple-500 focus:outline-none text-white"
+                                />
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm text-gray-400">
+                                <thead className="bg-black text-gray-200 font-medium uppercase tracking-wider">
+                                    <tr>
+                                        <th className="p-4">Order ID</th>
+                                        <th className="p-4">Customer</th>
+                                        <th className="p-4">Items</th>
+                                        <th className="p-4">Amount</th>
+                                        <th className="p-4">Status</th>
+                                        <th className="p-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {filteredOrders.length === 0 ? (
+                                        <tr><td colSpan={6} className="p-8 text-center text-gray-600">No transactions found</td></tr>
+                                    ) : (
+                                        filteredOrders.slice(0, 10).map((order: Order) => (
+                                            <tr key={order.id} className="hover:bg-white/5 transition-colors">
+                                                <td className="p-4 font-mono text-white">#{order.id.slice(-4)}</td>
+                                                <td className="p-4">
+                                                    <div className="font-bold text-white">{order.customerInfo.name}</div>
+                                                    <div className="text-xs">{order.customerInfo.phone}</div>
+                                                </td>
+                                                <td className="p-4">{order.items.length} items</td>
+                                                <td className="p-4 font-bold text-green-400">₹{order.total}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${order.status === 'completed' ? 'bg-green-500/20 text-green-400' : order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                                        {order.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    {order.status !== 'completed' && order.status !== 'cancelled' && (
+                                                         <button 
+                                                            onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                                                            className="p-2 hover:bg-red-500/20 text-red-500 rounded transition-colors"
+                                                            title="Cancel Order"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    };
+
+    return (
+        <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900/50">
+                <div className="flex items-center gap-4">
+                    <button onClick={onLogout} className="p-2 bg-zinc-800 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors"><ArrowLeft size={20} /></button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-purple-500 flex items-center gap-2"><LayoutDashboard /> Admin Dashboard</h1>
+                        <p className="text-xs text-gray-400">Manager Overview</p>
+                    </div>
+                </div>
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onClick={() => setView('dashboard')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view === 'dashboard' ? 'bg-purple-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>Overview</button>
+                    <button onClick={() => setView('inventory')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view === 'inventory' ? 'bg-purple-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>Inventory</button>
+                    <button onClick={() => setView('calendar')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view === 'calendar' ? 'bg-purple-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>Calendar</button>
+                     <label className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-gray-300 cursor-pointer transition-all flex items-center gap-2">
+                        <Upload size={14} /> Upload Menu
+                        <input type="file" accept=".csv" onChange={handleUploadMenu} className="hidden" />
+                    </label>
+                    <button onClick={handleDownloadMenu} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-gray-300 transition-all flex items-center gap-2">
+                        <Download size={14} /> Export Menu
+                    </button>
+                    <button onClick={onLogout} className="px-4 py-2 bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-bold flex items-center gap-2 transition-all">
+                        <LogOut size={14} /> Logout
+                    </button>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
+                {renderContent()}
+            </div>
+        </div>
+    );
+});
+
+const IngredientInventoryModal = ({ isOpen, onClose, ingredients, onToggle }: any) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'All' | 'Dairy' | 'Vegetable' | 'Protein' | 'Grain'>('All');
+
+    if(!isOpen) return null;
+
+    const filtered = ingredients.filter((i: Ingredient) => 
+        (activeTab === 'All' || i.category === activeTab) &&
+        i.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Package className="text-blue-400" /> Ingredient Inventory</h2>
+                    <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
+                </div>
+                <div className="p-4 border-b border-white/10 flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-2.5 text-gray-500" size={18} />
+                        <input 
+                            type="text" 
+                            placeholder="Search ingredients..." 
+                            value={searchTerm} 
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full bg-black border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-white focus:border-blue-500 focus:outline-none" 
+                        />
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
+                        {['All', 'Dairy', 'Vegetable', 'Protein', 'Grain'].map(tab => (
+                            <button 
+                                key={tab} 
+                                onClick={() => setActiveTab(tab as any)}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-blue-500 text-black' : 'bg-zinc-800 text-gray-400'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filtered.map((ing: Ingredient) => (
+                            <div key={ing.id} className={`p-4 rounded-xl border flex justify-between items-center transition-all ${ing.inStock ? 'bg-zinc-800/50 border-white/5' : 'bg-red-500/10 border-red-500/30'}`}>
+                                <div>
+                                    <p className={`font-bold ${ing.inStock ? 'text-white' : 'text-red-400'}`}>{ing.name}</p>
+                                    <p className="text-xs text-gray-500">{ing.category} • {ing.unit}</p>
+                                </div>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onToggle(ing.id); }}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${ing.inStock ? 'bg-green-500' : 'bg-zinc-700'}`}
+                                >
+                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${ing.inStock ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const StockControlModal = ({ isOpen, onClose, menu, onToggle }: any) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    if(!isOpen) return null;
+
+    const filtered = menu.filter((m: MenuItem) => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2"><List className="text-purple-400" /> Menu Stock Control</h2>
+                    <button onClick={onClose}><X className="text-gray-400 hover:text-white" /></button>
+                </div>
+                <div className="p-4 border-b border-white/10">
+                     <input 
+                        type="text" 
+                        placeholder="Search menu items..." 
+                        value={searchTerm} 
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none" 
+                    />
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filtered.map((item: MenuItem) => (
+                            <div key={item.id} className={`p-4 rounded-xl border flex justify-between items-center transition-all ${item.available ? 'bg-zinc-800/50 border-white/5' : 'bg-red-500/10 border-red-500/30'}`}>
+                                <div>
+                                    <p className={`font-bold ${item.available ? 'text-white' : 'text-red-400'}`}>{item.name}</p>
+                                    <p className="text-xs text-gray-500">{item.category}</p>
+                                </div>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); onToggle(item.id); }}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${item.available ? 'bg-green-500' : 'bg-zinc-700'}`}
+                                >
+                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${item.available ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Stub Components for Inventory/Calendar to maintain full app logic ---
+
+const InventoryManager = () => {
+    const [activeTab, setActiveTab] = useState<'Rooms' | 'Kitchen' | 'Open Area'>('Rooms');
+    // Mock data
+    const items: InventoryItem[] = [
+        { id: '1', name: 'Towels', quantity: 50, unit: 'pcs', area: 'Rooms', category: 'Linen', purchaseDate: '2024-01-01', cost: 5000, supplier: 'ABC Textiles', status: 'Good' },
+        { id: '2', name: 'Soap Dispensers', quantity: 10, unit: 'pcs', area: 'Rooms', category: 'Bathroom', purchaseDate: '2024-01-05', cost: 2000, supplier: 'CleanCo', status: 'Needs Replacement' },
+        { id: '3', name: 'Frying Pan', quantity: 5, unit: 'pcs', area: 'Kitchen', category: 'Cookware', purchaseDate: '2023-12-01', cost: 8000, supplier: 'ChefSupplies', status: 'Good' },
+    ];
+
+    const handleImportCSV = () => { alert('CSV Import functionality'); };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">Inventory Management</h2>
+                <button onClick={handleImportCSV} className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-bold text-white flex items-center gap-2"><FileSpreadsheet size={16}/> Import CSV</button>
+            </div>
+            <div className="flex gap-2 mb-6">
+                {['Rooms', 'Kitchen', 'Open Area'].map(tab => (
+                    <button key={tab} onClick={() => setActiveTab(tab as any)} className={`px-6 py-2 rounded-lg font-bold ${activeTab === tab ? 'bg-blue-500 text-black' : 'bg-zinc-800 text-gray-400'}`}>{tab}</button>
+                ))}
+            </div>
+            <div className="bg-zinc-900 rounded-xl border border-white/5 overflow-hidden">
+                 <table className="w-full text-left text-sm text-gray-400">
+                    <thead className="bg-black text-gray-200 font-medium uppercase">
+                        <tr>
+                            <th className="p-4">Item Name</th>
+                            <th className="p-4">Quantity</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4">Supplier</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                        {items.filter(i => i.area === activeTab).map(item => (
+                            <tr key={item.id}>
+                                <td className="p-4 text-white font-bold">{item.name}</td>
+                                <td className="p-4">{item.quantity} {item.unit}</td>
+                                <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${item.status === 'Good' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{item.status}</span></td>
+                                <td className="p-4">{item.supplier}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const CalendarPlanner = () => {
+    return (
+        <div className="space-y-6">
+             <h2 className="text-2xl font-bold text-white">Calendar Planner</h2>
+             <div className="bg-zinc-900 p-8 rounded-xl border border-white/5 text-center text-gray-500">
+                 <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                 <p>Full calendar implementation coming soon.</p>
+             </div>
+        </div>
+    );
+};
+
+const MenuEditorModal = ({ menu, onClose }: any) => (
+    <div className="bg-zinc-900 p-6 rounded-xl border border-white/10">
+        <div className="flex justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Menu Editor</h2>
+            <button onClick={onClose}><X className="text-gray-400" /></button>
+        </div>
+        <p className="text-gray-500">Menu editing interface placeholder.</p>
+    </div>
+);
+
+const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => (
+    <div className="p-8 bg-white text-black min-h-screen">
+        <h1 className="text-4xl font-bold text-center mb-8">Skylark Café Menu</h1>
+        <div className="grid grid-cols-2 gap-8">
+            {menu.map(item => (
+                <div key={item.id} className="border-b pb-2">
+                    <div className="flex justify-between font-bold text-lg">
+                        <span>{item.name}</span>
+                        <span>₹{item.price}</span>
+                    </div>
+                    <p className="text-gray-600">{item.description}</p>
+                </div>
             ))}
         </div>
-        
-        {/* Sidebar Scroll Down Button */}
-        <button 
-            onClick={() => scrollSidebar('down')}
-            className="w-full flex items-center justify-center p-2 text-cyan-400 hover:bg-white/5 hover:text-cyan-300 transition-colors border-t border-white/5 flex-none"
-        >
-            <ChevronDown size={20} />
-        </button>
-
-        <div className="p-4 bg-zinc-900 border-t border-white/5 flex-none">
-            <div className="relative mb-4">
-                <Search className="absolute left-3 top-2.5 text-gray-500" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search menu..." 
-                  className="w-full bg-black border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:border-cyan-500 outline-none placeholder:text-gray-600"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
-            <div className="flex gap-2">
-                <button 
-                  onClick={toggleVegMode}
-                  className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all ${isVegMode ? 'bg-green-500/10 border-green-500 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]' : 'bg-zinc-800 border-white/5 text-gray-400 hover:border-white/20'}`}
-                >
-                    <Leaf size={14} /> VEG
-                </button>
-                <button 
-                  onClick={() => setSortBy(prev => prev === 'price' ? 'time' : 'price')}
-                  className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-zinc-800 border border-white/5 text-gray-400 text-xs font-bold hover:border-white/20 transition-all"
-                >
-                    {sortBy === 'price' ? <DollarSign size={14} /> : <Clock size={14} />}
-                    {sortBy === 'price' ? 'PRICE' : 'TIME'}
-                </button>
-            </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {/* Sticky Header */}
-        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-white/5 p-3 md:p-4 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
-                <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 text-gray-400 hover:text-white">
-                    <AlignLeft size={24} />
-                </button>
-                <div className="md:hidden">
-                    <h1 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Skylark</h1>
-                </div>
-                
-                {/* Quick Nav */}
-                <div className="hidden sm:flex items-center bg-zinc-900/80 p-1 rounded-xl border border-white/10">
-                   <button onClick={() => scrollToCategory('Stay')} className="px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white text-gray-400 transition-colors flex items-center gap-2">
-                       <BedDouble size={16} /> Stay
-                   </button>
-                   <button onClick={() => scrollToCategory('Beverages (Hot)')} className="px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-white/5 hover:text-white text-gray-400 transition-colors flex items-center gap-2">
-                       <Coffee size={16} /> Café Menu
-                   </button>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-                <button onClick={() => window.open('https://maps.app.goo.gl/NUpz4bEUTTagFVUn9', '_blank')} className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/50 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all hover:scale-105">
-                    <MapPin size={20} />
-                </button>
-                 <button 
-                    onClick={() => onLogin('chef')}
-                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-orange-500/20 border border-white/5 hover:border-orange-500/50 flex items-center justify-center text-gray-400 hover:text-orange-400 transition-all hover:scale-105"
-                >
-                    <ChefHat size={20} />
-                </button>
-                <button 
-                    onClick={() => onLogin('admin')}
-                    className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/50 flex items-center justify-center text-gray-400 hover:text-purple-400 transition-all hover:scale-105"
-                >
-                    <User size={20} />
-                </button>
-                
-                <div className="h-8 w-px bg-white/10 mx-1"></div>
-
-                <button 
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative group flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 pl-2 pr-3 py-1.5 md:pl-3 md:pr-4 md:py-2 rounded-full hover:scale-105 transition-all shadow-lg shadow-cyan-500/20"
-                >
-                   <div className="relative">
-                       <ShoppingBag size={20} className="text-white" />
-                       {totalItems > 0 && (
-                        <span className="absolute -top-2 -right-2 w-4 h-4 md:w-5 md:h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-black">
-                            {totalItems}
-                        </span>
-                       )}
-                   </div>
-                   <span className="font-bold text-sm">₹{totalAmount}</span>
-                </button>
-            </div>
-        </header>
-
-        {/* Content Grid */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 md:p-8 scroll-smooth">
-            <div className="max-w-7xl mx-auto pb-32">
-                
-                {/* Menu Sections */}
-                {categories.map(cat => {
-                    const items = sortedMenu.filter(i => i.category === cat);
-                    if (items.length === 0) return null;
-                    const color = getCategoryTheme(cat);
-                    const isActive = activeCategory === cat;
-
-                    return (
-                        <section key={cat} id={`cat-${cat}`} className="mb-8 md:mb-12 scroll-mt-24">
-                           <div className="flex items-center gap-4 mb-4 md:mb-6">
-                               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white shadow-lg" style={{ color: color, boxShadow: isActive ? `0 0 20px ${color}30` : 'none' }}>
-                                   {getCategoryIcon(cat)}
-                               </div>
-                               <h2 className="text-2xl md:text-3xl font-bold font-serif tracking-wide text-white uppercase" style={{ textShadow: `0 0 30px ${color}50` }}>{cat}</h2>
-                               <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent"></div>
-                           </div>
-
-                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-                               {items.map(item => (
-                                   <div key={item.id} className={`group relative bg-transparent border border-white/10 rounded-2xl p-3 md:p-4 hover:border-[${color}]/50 hover:shadow-[0_0_30px_${color}20] hover:scale-[1.02] transition-all duration-200 overflow-hidden min-h-[140px] md:h-44 flex flex-col`} style={{ borderColor: isActive ? `${color}40` : '' }}>
-                                       
-                                       {/* Neon Pop-up Art */}
-                                       <div className="absolute -right-4 -bottom-4 text-white/5 group-hover:text-white/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 z-0" style={{ color: `${color}10` }}>
-                                           {React.cloneElement(getCategoryIcon(cat) as React.ReactElement<any>, { size: 120 })}
-                                       </div>
-                                       
-                                       <div className="relative z-10 flex justify-between items-start mb-2">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`}></div>
-                                            
-                                            {item.available ? (
-                                                <button 
-                                                    onClick={() => addToCart(item)}
-                                                    className={`p-2 rounded-xl bg-white/5 hover:scale-105 active:scale-95 transition-all border border-white/10 shadow-lg ${item.isVeg ? 'hover:bg-green-500 hover:text-black hover:border-green-500' : 'hover:bg-red-500 hover:text-white hover:border-red-500'}`}
-                                                >
-                                                    <Plus size={18} />
-                                                </button>
-                                            ) : (
-                                                <span className="text-[10px] font-bold bg-zinc-800 px-2 py-1 rounded text-gray-500 border border-white/5">SOLD OUT</span>
-                                            )}
-                                       </div>
-
-                                       <div className="relative z-10 flex-1">
-                                           <h3 className={`font-bold text-base md:text-lg leading-tight mb-1 group-hover:text-[${color}] transition-colors`} style={{ color: isActive ? color : 'white' }}>{item.name}</h3>
-                                           <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">{item.category}</p>
-                                           <p className="text-xs md:text-[11px] text-gray-400 line-clamp-2 leading-relaxed">{item.description}</p>
-                                       </div>
-
-                                       <div className="relative z-10 mt-auto flex items-end justify-between">
-                                           <span className="text-lg md:text-xl font-bold text-cyan-400">₹{item.price}</span>
-                                           <div className="flex items-center gap-1 text-[10px] md:text-xs font-medium text-gray-500 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
-                                               <Clock size={10} /> {item.prepTime}
-                                           </div>
-                                       </div>
-                                       
-                                       {!item.available && <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] z-20 pointer-events-none" />}
-                                   </div>
-                               ))}
-                           </div>
-                        </section>
-                    );
-                })}
-            </div>
-        </div>
-      </div>
-
-      {/* Cart Sidebar */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-[60]">
-           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
-           <div className="absolute right-0 top-0 h-full w-full max-w-md bg-zinc-900 border-l border-white/10 shadow-2xl flex flex-col animate-slide-in">
-               <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/20">
-                   <h2 className="text-xl font-bold flex items-center gap-2">
-                       <ShoppingBag className="text-cyan-400" /> Your Cart
-                   </h2>
-                   <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white"><X size={20}/></button>
-               </div>
-
-               <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                   {cart.length === 0 ? (
-                       <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4">
-                           <ShoppingBag size={64} strokeWidth={1} className="text-gray-700" />
-                           <p>Your cart is empty</p>
-                           <button onClick={() => setIsCartOpen(false)} className="px-6 py-2 bg-white/5 rounded-full text-sm hover:bg-white/10 text-white transition-colors">Browse Menu</button>
-                       </div>
-                   ) : (
-                       <div className="space-y-4">
-                           {cart.map(item => (
-                               <div key={item.id} className="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5">
-                                   <div className="flex-1">
-                                       <div className="flex items-center gap-2 mb-1">
-                                           <div className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`} />
-                                           <h4 className="font-medium text-white">{item.name}</h4>
-                                       </div>
-                                       <p className="text-cyan-400 text-sm font-bold">₹{item.price * item.quantity}</p>
-                                   </div>
-                                   <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
-                                       <button onClick={() => updateQuantity(item.id, -1)} className="p-1 hover:bg-black/50 rounded text-gray-400 hover:text-white"><Minus size={16} /></button>
-                                       <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                                       <button onClick={() => updateQuantity(item.id, 1)} className="p-1 hover:bg-black/50 rounded text-gray-400 hover:text-white"><Plus size={16} /></button>
-                                   </div>
-                                   <button onClick={() => removeFromCart(item.id)} className="ml-3 text-red-500/50 hover:text-red-500"><Trash2 size={18} /></button>
-                               </div>
-                           ))}
-                       </div>
-                   )}
-               </div>
-
-               {cart.length > 0 && (
-                   <div className="p-6 border-t border-white/10 bg-black/20 space-y-4">
-                       <div className="space-y-2 text-sm text-gray-400">
-                           <div className="flex justify-between"><span>Subtotal</span><span>₹{totalAmount}</span></div>
-                           <div className="flex justify-between text-white font-bold text-lg pt-2 border-t border-white/10"><span>Total</span><span>₹{totalAmount}</span></div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-3">
-                            <button onClick={clearCart} className="py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 font-medium text-sm">Clear Cart</button>
-                            <button onClick={() => setIsOrderModalOpen(true)} className="py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold shadow-lg shadow-cyan-500/25 hover:scale-[1.02] transition-transform">Place Order</button>
-                       </div>
-                   </div>
-               )}
-           </div>
-        </div>
-      )}
-
-      {/* Modals */}
-      <PlaceOrderModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)} onSubmit={placeOrder} />
-      
-      <ScrollToTop />
     </div>
-  );
-});
+);
+
+const ScrollToTop = () => {
+    const [isVisible, setIsVisible] = useState(false);
+    
+    useEffect(() => {
+        const toggleVisibility = () => {
+            if (window.scrollY > 300 || document.querySelector('.overflow-y-auto')?.scrollTop! > 300) {
+                setIsVisible(true);
+            } else {
+                setIsVisible(false);
+            }
+        };
+
+        window.addEventListener('scroll', toggleVisibility);
+        const scrollContainer = document.querySelector('.overflow-y-auto');
+        if(scrollContainer) scrollContainer.addEventListener('scroll', toggleVisibility);
+
+        return () => {
+            window.removeEventListener('scroll', toggleVisibility);
+             if(scrollContainer) scrollContainer.removeEventListener('scroll', toggleVisibility);
+        };
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const scrollContainer = document.querySelector('.overflow-y-auto');
+        if(scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (!isVisible) return null;
+
+    return (
+        <button 
+            onClick={scrollToTop} 
+            className="fixed bottom-24 right-4 md:bottom-8 md:right-8 p-3 bg-cyan-500 text-black rounded-full shadow-lg hover:bg-cyan-400 transition-all z-50 animate-fade-in"
+        >
+            <ChevronUp size={24} />
+        </button>
+    );
+};
+
+const Toast = ({ message, visible }: { message: string, visible: boolean }) => {
+    if (!visible) return null;
+    return (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-black px-6 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(34,197,94,0.5)] z-[60] animate-fade-in flex items-center gap-2">
+            <CheckCircle size={20} />
+            {message}
+        </div>
+    );
+};
+
+// --- Main App Component ---
+
+const App = () => {
+    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'login' | 'order-confirmation' | 'printable'>('customer');
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
+    const [orders, setOrders] = useState<Order[]>(() => {
+        const saved = localStorage.getItem('skylark_orders');
+        return saved ? JSON.parse(saved, (key, value) => key === 'timestamp' ? new Date(value) : value) : [];
+    });
+    const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+    const [authTarget, setAuthTarget] = useState<'kitchen' | 'admin'>('kitchen');
+    const [menu, setMenu] = useState<MenuItem[]>(buildMenu());
+    const [ingredients, setIngredients] = useState<Ingredient[]>(MASTER_INGREDIENTS);
+    const [activeCategory, setActiveCategory] = useState('Burgers');
+    const [toastMessage, setToastMessage] = useState('');
+    const [showToast, setShowToast] = useState(false);
+
+    // NEW HOOK: Prevent accidental tab closure
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = ''; // Chrome requires returnValue to be set
+            return ''; // Some browsers show custom message
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, []);
+
+    // Check for persistent login
+    useEffect(() => {
+        const auth = localStorage.getItem('skylark_auth');
+        if (auth) {
+            const { type } = JSON.parse(auth);
+            // Auto-redirect if on customer view and auth exists? 
+            // For now, we just know the user is logged in. 
+            // Or we can auto-redirect:
+            // if (view === 'customer') setView(type); 
+            // But maybe they want to order food. Let's just use it for quick access.
+        }
+    }, []);
+
+    // Save orders to local storage whenever they change
+    useEffect(() => {
+        localStorage.setItem('skylark_orders', JSON.stringify(orders));
+    }, [orders]);
+
+    // Ingredient Logic: Update Menu Availability based on Ingredients
+    useEffect(() => {
+        const updatedMenu = menu.map(item => {
+            const missing = item.requiredIngredients.filter(reqId => {
+                const ing = ingredients.find(i => i.id === reqId);
+                return ing && !ing.inStock;
+            });
+            
+            // If item was manually set to unavailable, keep it unavailable? 
+            // For now, let's allow ingredient logic to override ONLY if stock is missing.
+            // If ingredients are OK, we trust the manual 'available' toggle or default true.
+            // Actually, simpler: If missing > 0, available = false. Else keep current.
+            if (missing.length > 0) {
+                return { ...item, available: false, missingIngredients: missing };
+            } else {
+                // Check if it was disabled due to ingredients previously
+                if (item.missingIngredients && item.missingIngredients.length > 0) {
+                     return { ...item, available: true, missingIngredients: [] };
+                }
+                return { ...item, missingIngredients: [] };
+            }
+        });
+        // Only set if changed to avoid loop
+        if (JSON.stringify(updatedMenu) !== JSON.stringify(menu)) {
+            setMenu(updatedMenu);
+        }
+    }, [ingredients]); // Depend on ingredients
+
+
+    const handleAddToCart = (item: MenuItem) => {
+        setCart(prev => {
+            const existing = prev.find(i => i.id === item.id);
+            if (existing) {
+                return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+            return [...prev, { ...item, quantity: 1 }];
+        });
+        setToastMessage(`Added ${item.name} to cart`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    };
+
+    const handleUpdateCartQuantity = (itemId: string, delta: number) => {
+        setCart(prev => prev.map(item => {
+            if (item.id === itemId) {
+                return { ...item, quantity: Math.max(0, item.quantity + delta) };
+            }
+            return item;
+        }).filter(item => item.quantity > 0));
+    };
+
+    const calculatePrepTime = (items: CartItem[]) => {
+        if (items.length === 0) return 0;
+        const maxTime = Math.max(...items.map(i => i.prepTime));
+        const buffer = items.length * 2; // 2 mins per extra item
+        return maxTime + buffer;
+    };
+
+    const handlePlaceOrder = (info: CustomerInfo) => {
+        const newOrder: Order = {
+            id: Date.now().toString(),
+            items: [...cart],
+            total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
+            status: 'pending',
+            timestamp: new Date(),
+            customerInfo: info,
+            estimatedTime: calculatePrepTime(cart)
+        };
+        setOrders(prev => [newOrder, ...prev]);
+        setCart([]);
+        setCurrentOrderId(newOrder.id);
+        setView('order-confirmation');
+    };
+
+    const handleLogin = (type: 'kitchen' | 'admin', save: boolean) => {
+        if (save) {
+            localStorage.setItem('skylark_auth', JSON.stringify({ 
+                type, 
+                username: type === 'kitchen' ? 'skylarkcafe' : 'skylark',
+                timestamp: new Date().getTime() 
+            }));
+        }
+        setView(type);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('skylark_auth');
+        setView('customer');
+    };
+
+    const updateOrderStatus = (orderId: string, status: Order['status']) => {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    };
+
+    const updateStockStatus = (itemId: string) => {
+        setMenu(prev => prev.map(m => m.id === itemId ? { ...m, available: !m.available } : m));
+    };
+
+    const updateIngredientStatus = (ingId: string) => {
+        setIngredients(prev => prev.map(i => i.id === ingId ? { ...i, inStock: !i.inStock } : i));
+    };
+
+    const handleNavigate = (target: 'kitchen' | 'admin') => {
+        const auth = localStorage.getItem('skylark_auth');
+        if (auth) {
+            const { type } = JSON.parse(auth);
+            if (type === target) {
+                setView(target);
+                return;
+            }
+        }
+        setAuthTarget(target);
+        setView('login');
+    };
+
+    return (
+        <>
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { bg: #18181b; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #52525b; }
+            `}</style>
+            
+            {view === 'customer' && (
+                <CustomerView 
+                    menu={menu} 
+                    cart={cart} 
+                    onAddToCart={handleAddToCart} 
+                    onUpdateCartQuantity={handleUpdateCartQuantity}
+                    onPlaceOrder={() => setIsPlaceOrderOpen(true)}
+                    onNavigate={handleNavigate}
+                    activeCategory={activeCategory}
+                    setActiveCategory={setActiveCategory}
+                />
+            )}
+
+            {view === 'login' && (
+                <LoginView onLogin={handleLogin} onBack={() => setView('customer')} />
+            )}
+
+            {view === 'kitchen' && (
+                <KitchenView 
+                    orders={orders} 
+                    menu={menu}
+                    updateOrderStatus={updateOrderStatus} 
+                    updateStockStatus={updateStockStatus}
+                    missingIngredients={menu.filter(m => !m.available && m.missingIngredients?.length)} 
+                    ingredients={ingredients}
+                    updateIngredientStatus={updateIngredientStatus}
+                    onLogout={handleLogout}
+                />
+            )}
+
+            {view === 'admin' && (
+                <AdminView 
+                    orders={orders} 
+                    menu={menu} 
+                    updateOrderStatus={updateOrderStatus} 
+                    onLogout={handleLogout}
+                    setMenu={setMenu}
+                />
+            )}
+
+            {view === 'order-confirmation' && currentOrderId && (
+                <OrderConfirmation 
+                    orderId={currentOrderId} 
+                    estimatedTime={orders.find(o => o.id === currentOrderId)?.estimatedTime || 20}
+                    status={orders.find(o => o.id === currentOrderId)?.status || 'pending'}
+                    onBack={() => setView('customer')} 
+                />
+            )}
+
+            {view === 'printable' && <PrintableMenu menu={menu} />}
+
+            <PlaceOrderModal 
+                isOpen={isPlaceOrderOpen} 
+                onClose={() => setIsPlaceOrderOpen(false)} 
+                onSubmit={handlePlaceOrder} 
+            />
+
+            <Toast message={toastMessage} visible={showToast} />
+        </>
+    );
+};
+
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);
