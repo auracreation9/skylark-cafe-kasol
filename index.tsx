@@ -1354,6 +1354,14 @@ const CustomerView = React.memo(({
 
     return (
       <div className="flex h-screen bg-black text-white overflow-hidden relative font-sans">
+        <style>{`
+            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+            html, body { overscroll-behavior-y: none; }
+        `}</style>
+        
         {toast && <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100]"><Toast message={toast} onClose={() => setToast(null)} /></div>}
         {isSidebarOpen && <div className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm animate-fade-in" onClick={() => setIsSidebarOpen(false)} />}
 
@@ -1362,7 +1370,7 @@ const CustomerView = React.memo(({
                 <h1 className="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#00E5FF] to-[#FF00FF]">Skylark Café</h1>
                 <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400"><X className="w-6 h-6" /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-6">
+            <div className="flex-1 overflow-y-auto p-3 space-y-6 custom-scrollbar">
                 {['Stay', 'Drinks', 'Fast Food', 'Main Course'].map(group => (
                     groupedCategories[group] && groupedCategories[group].length > 0 ? (
                     <div key={group}>
@@ -1418,9 +1426,9 @@ const CustomerView = React.memo(({
             </div>
         </div>
 
-        <div className="flex-1 flex flex-col h-full relative z-10 w-full">
+        <div className="flex-1 flex flex-col h-full relative z-10 w-full min-w-0 bg-black">
             {/* Responsive Header (Mobile & Desktop) */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-md z-30 shadow-sm">
                  <div className="flex items-center gap-3">
                      <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-white"><MenuIcon className="w-6 h-6" /></button>
                      <span className="md:hidden text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00E5FF] to-[#FF00FF]">Skylark</span>
@@ -1459,7 +1467,7 @@ const CustomerView = React.memo(({
             </div>
 
             {/* Sticky Navigation for Stay/Menu */}
-            <div className="sticky top-0 md:top-0 z-20 flex bg-black/80 backdrop-blur-md border-b border-white/10">
+            <div className="relative z-20 flex bg-black/80 backdrop-blur-md border-b border-white/10 shrink-0">
                 <button onClick={scrollToStay} className="flex-1 py-3 text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition-colors text-[#00E5FF]">
                     <Home className="w-4 h-4" /> Stay
                 </button>
@@ -1469,7 +1477,7 @@ const CustomerView = React.memo(({
                 </button>
             </div>
 
-          <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 scroll-smooth">
+          <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 scroll-smooth custom-scrollbar relative">
              <div className="pb-32 space-y-10 max-w-7xl mx-auto">
                {menuBySection.map(([category, items]) => {
                   const theme = getCategoryTheme(category);
@@ -1541,475 +1549,3 @@ const CustomerView = React.memo(({
       </div>
     );
 });
-
-// --- Kitchen View (Optimized) ---
-
-const KitchenView = React.memo(({
-    orders,
-    setOrders,
-    setView,
-    ingredients,
-    toggleIngredient,
-    addIngredient,
-    deleteIngredient,
-    menu,
-    toggleAvailability
-}: any) => {
-    const [showStockModal, setShowStockModal] = useState(false);
-    const [showInventoryModal, setShowInventoryModal] = useState(false);
-    const activeOrders = orders.filter((o: Order) => o.status !== 'completed' && o.status !== 'cancelled').sort((a: Order, b: Order) => b.timestamp - a.timestamp);
-    const updateStatus = (orderId: string, status: Order['status']) => {
-      setOrders((prev: Order[]) => prev.map(o => o.id === orderId ? { ...o, status } : o));
-    };
-
-    return (
-      <div className="min-h-screen bg-slate-900 text-white p-6">
-        <StockControlModal isOpen={showStockModal} onClose={() => setShowStockModal(false)} menu={menu} toggleAvailability={toggleAvailability} />
-        <IngredientInventoryModal isOpen={showInventoryModal} onClose={() => setShowInventoryModal(false)} ingredients={ingredients} toggleIngredient={toggleIngredient} addIngredient={addIngredient} deleteIngredient={deleteIngredient} />
-        
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
-           <div className="flex items-center gap-4 w-full md:w-auto"><button onClick={() => setView('customer')} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><ArrowLeft className="w-6 h-6" /></button><h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 md:w-8 md:h-8 text-orange-500" /> Kitchen Display</h1></div>
-           <div className="flex flex-col gap-3 w-full md:w-auto">
-                <div className="grid grid-cols-2 gap-3 w-full">
-                    <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 text-center"><span className="text-gray-400 text-xs uppercase font-bold">Pending</span><div className="text-2xl font-bold text-[#FFFF00]">{orders.filter((o: Order) => o.status === 'pending').length}</div></div>
-                    <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 text-center"><span className="text-gray-400 text-xs uppercase font-bold">Preparing</span><div className="text-2xl font-bold text-[#00E5FF]">{orders.filter((o: Order) => o.status === 'preparing').length}</div></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 w-full">
-                     <button onClick={() => setShowInventoryModal(true)} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95"><Refrigerator className="w-4 h-4" /> Ingredients</button>
-                     <button onClick={() => setShowStockModal(true)} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95"><Box className="w-4 h-4" /> Menu Stock</button>
-                </div>
-           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {activeOrders.map((order: Order) => (
-            <div key={order.id} className={`bg-slate-800 rounded-xl border-l-4 shadow-xl overflow-hidden ${order.status === 'pending' ? 'border-yellow-500' : order.status === 'preparing' ? 'border-blue-500' : 'border-green-500'}`}>
-              <div className="p-4 border-b border-slate-700 bg-slate-800/50 flex justify-between items-start">
-                <div><h3 className="text-xl font-bold text-white">#{order.id.toUpperCase()}</h3><p className="text-gray-400 text-sm">{order.customerName}</p></div>
-                <div className="text-right"><div className="text-sm font-mono text-gray-400">{new Date(order.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div><div className="text-xs text-gray-500 mt-1">{Math.floor((Date.now() - order.timestamp) / 60000)}m ago</div></div>
-              </div>
-              <div className="p-4 max-h-[300px] overflow-y-auto">
-                {order.items.map((item, idx) => {
-                    const liveItem = menu.find((m: MenuItem) => m.id === item.id);
-                    const missing = liveItem?.missingIngredients;
-
-                    return (
-                        <div key={idx} className={`mb-3 pb-2 border-b border-slate-700/50 last:border-0 ${missing?.length ? 'bg-red-900/20 p-2 rounded-lg -mx-2 border border-red-500/30' : ''}`}>
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-[#00FF00]' : 'bg-[#FF1744]'}`} />
-                                    <div>
-                                        <span className={`font-medium ${missing?.length ? 'text-red-200' : 'text-gray-200'}`}>{item.name}</span>
-                                        <div className="text-xs text-gray-500">{item.category}</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3"><span className="text-sm font-bold bg-slate-700 px-2 py-0.5 rounded text-white">x{item.quantity}</span></div>
-                            </div>
-                            {missing && missing.length > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-red-400 uppercase tracking-wide">
-                                    <AlertCircle className="w-3 h-3" />
-                                    <span>Missing: {missing.join(', ')}</span>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-              </div>
-              <div className="p-4 bg-slate-700/30 border-t border-slate-700 flex gap-2">
-                {order.status === 'pending' && <button onClick={() => updateStatus(order.id, 'preparing')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"><Flame className="w-4 h-4" /> Start Cooking</button>}
-                {order.status === 'preparing' && <button onClick={() => updateStatus(order.id, 'ready')} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"><CheckCircleIcon className="w-4 h-4" /> Mark Ready</button>}
-                {order.status === 'ready' && <button onClick={() => updateStatus(order.id, 'completed')} className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg font-medium transition-colors">Complete</button>}
-              </div>
-            </div>
-          ))}
-          {activeOrders.length === 0 && <div className="col-span-full flex flex-col items-center justify-center h-64 text-gray-500"><ChefHat className="w-16 h-16 mb-4 opacity-20" /><p>No active orders</p></div>}
-        </div>
-      </div>
-    );
-});
-
-const AdminView = React.memo(({
-    orders,
-    setOrders,
-    setView,
-    menu,
-    setMenu,
-    toggleAvailability,
-    ingredients,
-    toggleIngredient,
-    addIngredient,
-    deleteIngredient,
-    addMenuItem,
-    deleteMenuItem,
-    inventory,
-    setInventory,
-    purchaseLogs,
-    setPurchaseLogs,
-    usageLogs,
-    setUsageLogs,
-    events,
-    setEvents
-}: any) => {
-    const [showStockModal, setShowStockModal] = useState(false);
-    const [showInventoryModal, setShowInventoryModal] = useState(false);
-    const [showMenuEditor, setShowMenuEditor] = useState(false);
-    const [showFullInventory, setShowFullInventory] = useState(false);
-    const [showPlanner, setShowPlanner] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const completedOrders = orders.filter((o: Order) => o.status === 'completed' || o.status === 'cancelled');
-    const totalRevenue = completedOrders.reduce((sum: number, o: Order) => sum + o.totalAmount, 0);
-
-    // Calculate Daily Stats
-    const today = new Date().toLocaleDateString();
-    const todayOrdersList = orders.filter((o: Order) => new Date(o.timestamp).toLocaleDateString() === today);
-    const todayRevenue = todayOrdersList.reduce((sum: number, o: Order) => sum + o.totalAmount, 0);
-    const todayAvgOrderValue = todayOrdersList.length ? Math.round(todayRevenue / todayOrdersList.length) : 0;
-
-    // Calculate Popular Items
-    const popularItems = useMemo(() => {
-        const itemCounts: { [key: string]: number } = {};
-        orders.forEach((order: Order) => {
-            order.items.forEach(item => {
-                itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity;
-            });
-        });
-        return Object.entries(itemCounts)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 5); // Top 5
-    }, [orders]);
-
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const csvText = event.target?.result as string;
-            if (csvText) {
-                const newMenu = parseCSV(csvText, menu);
-                if (newMenu) { setMenu(newMenu); alert(`Successfully updated ${newMenu.length} items.`); }
-            }
-        };
-        reader.readAsText(file);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    const deleteOrder = (id: string) => {
-        if(confirm('Are you sure you want to delete this order?')) {
-            setOrders((prev: Order[]) => prev.filter(o => o.id !== id));
-        }
-    }
-
-    const filteredOrders = orders.filter((order: Order) => 
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a: Order, b: Order) => b.timestamp - a.timestamp);
-
-    return (
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-         <StockControlModal isOpen={showStockModal} onClose={() => setShowStockModal(false)} menu={menu} toggleAvailability={toggleAvailability} />
-         <IngredientInventoryModal isOpen={showInventoryModal} onClose={() => setShowInventoryModal(false)} ingredients={ingredients} toggleIngredient={toggleIngredient} addIngredient={addIngredient} deleteIngredient={deleteIngredient} />
-         <MenuEditorModal isOpen={showMenuEditor} onClose={() => setShowMenuEditor(false)} menu={menu} onSave={addMenuItem} onDelete={deleteMenuItem} />
-         <InventoryManager isOpen={showFullInventory} onClose={() => setShowFullInventory(false)} inventory={inventory} setInventory={setInventory} purchaseLogs={purchaseLogs} setPurchaseLogs={setPurchaseLogs} usageLogs={usageLogs} setUsageLogs={setUsageLogs} />
-         <CalendarPlanner isOpen={showPlanner} onClose={() => setShowPlanner(false)} events={events} setEvents={setEvents} />
-         
-         <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".csv,.xlsx" />
-
-         <div className="bg-white border-b px-4 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-20 shadow-sm gap-4">
-            <div className="flex items-center gap-4 w-full md:w-auto"><button onClick={() => setView('customer')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"><ArrowLeft className="w-6 h-6" /></button><h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2"><TrendingUp className="w-6 h-6 text-blue-600" /> Manager Dashboard</h1></div>
-            <div className="flex flex-wrap gap-2 w-full md:w-auto justify-start md:justify-end">
-               <button onClick={() => setShowMenuEditor(true)} className="flex items-center gap-2 px-4 py-2 border border-orange-200 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 text-sm font-medium whitespace-nowrap"><Edit className="w-4 h-4" /> Edit Menu</button>
-               <button onClick={() => setShowInventoryModal(true)} className="flex items-center gap-2 px-4 py-2 border border-cyan-200 bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100 text-sm font-medium whitespace-nowrap"><Refrigerator className="w-4 h-4" /> Food Stock</button>
-               <button onClick={() => setShowStockModal(true)} className="flex items-center gap-2 px-4 py-2 border border-purple-200 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 text-sm font-medium whitespace-nowrap"><Box className="w-4 h-4" /> Menu Stock</button>
-               <button onClick={() => setShowFullInventory(true)} className="flex items-center gap-2 px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium whitespace-nowrap"><Package className="w-4 h-4" /> Inventory</button>
-               <button onClick={() => setShowPlanner(true)} className="flex items-center gap-2 px-4 py-2 border border-pink-200 bg-pink-50 text-pink-700 rounded-lg hover:bg-pink-100 text-sm font-medium whitespace-nowrap"><Calendar className="w-4 h-4" /> Calendar Planner</button>
-               <button onClick={() => generateCSV(menu)} className="flex items-center gap-2 px-4 py-2 border border-green-200 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 text-sm font-medium whitespace-nowrap"><Download className="w-4 h-4" /> Export</button>
-               <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm font-medium whitespace-nowrap"><Upload className="w-4 h-4" /> Import</button>
-               <button onClick={() => setView('printable')} className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium shadow-sm whitespace-nowrap"><Printer className="w-4 h-4" /> Print</button>
-            </div>
-         </div>
-
-         <div className="max-w-7xl mx-auto p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div className="text-gray-500 text-sm font-medium">Total Revenue</div><div className="text-3xl font-bold text-gray-900 mt-1">₹{totalRevenue.toLocaleString()}</div></div>
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div className="text-gray-500 text-sm font-medium">Total Orders</div><div className="text-3xl font-bold text-blue-600 mt-1">{orders.length}</div></div>
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div className="text-gray-500 text-sm font-medium">Avg Order Value</div><div className="text-3xl font-bold text-green-600 mt-1">₹{orders.length ? Math.round(totalRevenue / orders.length) : 0}</div></div>
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100"><div className="text-gray-500 text-sm font-medium">Pending Orders</div><div className="text-3xl font-bold text-yellow-600 mt-1">{orders.filter((o: Order) => o.status === 'pending').length}</div></div>
-            </div>
-
-            {/* Dashboard Summary Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><CalendarDays className="w-5 h-5 text-purple-600" /> Daily Snapshot ({new Date().toLocaleDateString()})</h2>
-                  <div className="grid grid-cols-3 gap-4">
-                      <div className="p-4 bg-purple-50 rounded-lg border border-purple-100 text-center">
-                          <div className="text-xs text-purple-600 font-bold uppercase mb-1">Revenue Today</div>
-                          <div className="text-2xl font-bold text-gray-800">₹{todayRevenue.toLocaleString()}</div>
-                      </div>
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                          <div className="text-xs text-blue-600 font-bold uppercase mb-1">Orders Today</div>
-                          <div className="text-2xl font-bold text-gray-800">{todayOrdersList.length}</div>
-                      </div>
-                      <div className="p-4 bg-green-50 rounded-lg border border-green-100 text-center">
-                          <div className="text-xs text-green-600 font-bold uppercase mb-1">Avg Value</div>
-                          <div className="text-2xl font-bold text-gray-800">₹{todayAvgOrderValue}</div>
-                      </div>
-                  </div>
-               </div>
-               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-orange-500" /> Most Popular Items</h2>
-                  <div className="space-y-3">
-                      {popularItems.map(([name, count], index) => (
-                          <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                              <div className="flex items-center gap-3">
-                                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' : index === 1 ? 'bg-gray-200 text-gray-600' : index === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'}`}>{index + 1}</span>
-                                  <span className="font-medium text-gray-700">{name}</span>
-                              </div>
-                              <span className="text-sm font-bold text-gray-900">{count} sold</span>
-                          </div>
-                      ))}
-                      {popularItems.length === 0 && <div className="text-center text-gray-400 text-sm py-4">No sales data yet</div>}
-                  </div>
-               </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-               <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <h2 className="font-bold text-lg">Recent Transactions</h2>
-                  <div className="relative w-full sm:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input type="text" placeholder="Search Order ID or Name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/></div>
-               </div>
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                     <thead className="bg-gray-50 text-gray-500 font-medium">
-                        <tr><th className="px-6 py-3">Order ID</th><th className="px-6 py-3">Customer</th><th className="px-6 py-3">Items</th><th className="px-6 py-3">Amount</th><th className="px-6 py-3">Status</th><th className="px-6 py-3">Time</th><th className="px-6 py-3">Action</th></tr>
-                     </thead>
-                     <tbody className="divide-y divide-gray-100">
-                        {filteredOrders.length > 0 ? (
-                            filteredOrders.map((order: Order) => (
-                               <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                                  <td className="px-6 py-3 font-mono text-gray-600">#{order.id}</td>
-                                  <td className="px-6 py-3 font-medium text-gray-900">{order.customerName}</td>
-                                  <td className="px-6 py-3 text-gray-600 max-w-xs truncate">{order.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</td>
-                                  <td className="px-6 py-3 font-bold text-gray-900">₹{order.totalAmount}</td>
-                                  <td className="px-6 py-3"><span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'completed' ? 'bg-green-100 text-green-800' : order.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></td>
-                                  <td className="px-6 py-3 text-gray-500">{new Date(order.timestamp).toLocaleString()}</td>
-                                  <td className="px-6 py-3"><button onClick={() => deleteOrder(order.id)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button></td>
-                               </tr>
-                            ))
-                        ) : (<tr><td colSpan={7} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>)}
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-         </div>
-      </div>
-    );
-});
-
-const PrintableMenu = React.memo(({ menu, setView }: { menu: MenuItem[], setView: any }) => {
-    const categories = Array.from(new Set(menu.map(item => item.category)));
-    const grouped = categories.reduce((acc, cat) => {
-        acc[cat] = menu.filter(i => i.category === cat && i.available);
-        return acc;
-    }, {} as Record<string, MenuItem[]>);
-
-    return (
-        <div className="bg-white min-h-screen p-8 text-black font-sans">
-            <div className="fixed top-4 right-4 flex gap-4 print:hidden">
-                <button onClick={() => window.print()} className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-lg font-bold flex items-center gap-2"><Printer className="w-4 h-4"/> Print</button>
-                <button onClick={() => setView('admin')} className="bg-gray-800 text-white px-6 py-2 rounded-lg shadow-lg font-bold">Back</button>
-            </div>
-            
-            <div className="max-w-4xl mx-auto border-4 border-black p-8 min-h-[29.7cm]">
-                <div className="text-center mb-12 border-b-4 border-black pb-6">
-                    <h1 className="text-6xl font-black uppercase tracking-tighter mb-2">Skylark Café</h1>
-                    <p className="text-xl font-serif italic text-gray-600">Fine Dining & Luxury Stay</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    {Object.entries(grouped).map(([cat, items]) => (
-                        items.length > 0 && (
-                            <div key={cat} className="break-inside-avoid mb-6">
-                                <h3 className="text-2xl font-black uppercase border-b-2 border-black mb-4 flex justify-between items-end">
-                                    {cat}
-                                </h3>
-                                <div className="space-y-3">
-                                    {items.map(item => (
-                                        <div key={item.id} className="flex justify-between items-baseline group">
-                                            <div className="flex-1 pr-4">
-                                                <div className="font-bold text-lg leading-none">{item.name} {item.isVeg ? <span className="text-green-600 text-xs ml-1">●</span> : <span className="text-red-600 text-xs ml-1">●</span>}</div>
-                                                <div className="text-xs text-gray-500 leading-tight mt-0.5 italic">{item.description}</div>
-                                            </div>
-                                            <div className="font-black text-xl">₹{item.price}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    ))}
-                </div>
-                
-                <div className="mt-12 pt-6 border-t-4 border-black text-center text-sm font-bold uppercase tracking-widest text-gray-400">
-                    Thank you for dining with us
-                </div>
-            </div>
-        </div>
-    );
-});
-
-const App = () => {
-    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'login' | 'printable' | 'confirmation'>('customer');
-    const [loginTarget, setLoginTarget] = useState<'kitchen' | 'admin' | null>(null);
-    const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
-    const [cart, setCart] = useState<CartItem[]>([]);
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [ingredients, setIngredients] = useState<Ingredient[]>(INITIAL_INGREDIENTS);
-    
-    // New Data States
-    const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
-    const [events, setEvents] = useState<CalendarEvent[]>(INITIAL_EVENTS);
-    const [purchaseLogs, setPurchaseLogs] = useState<PurchaseLog[]>([]);
-    const [usageLogs, setUsageLogs] = useState<UsageLog[]>([]);
-    const [lastOrder, setLastOrder] = useState<Order | null>(null);
-
-    const addToCart = useCallback((item: MenuItem) => {
-        setCart(prev => {
-            const existing = prev.find(i => i.id === item.id);
-            if (existing) {
-                return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-            }
-            return [...prev, { ...item, quantity: 1 }];
-        });
-    }, []);
-
-    const updateCartQty = useCallback((id: string, delta: number) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === id) {
-                return { ...item, quantity: Math.max(0, item.quantity + delta) };
-            }
-            return item;
-        }).filter(item => item.quantity > 0));
-    }, []);
-
-    const clearCart = useCallback(() => setCart([]), []);
-
-    const placeOrder = useCallback((customerName: string) => {
-        if (cart.length === 0) return;
-        const newOrder: Order = {
-            id: Math.random().toString(36).substr(2, 5).toUpperCase(),
-            customerName,
-            items: [...cart],
-            status: 'pending',
-            totalAmount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            timestamp: Date.now(),
-            estimatedTime: calculatePrepTime(cart)
-        };
-        setOrders(prev => [...prev, newOrder]);
-        setCart([]);
-        setLastOrder(newOrder);
-        setView('confirmation');
-    }, [cart]);
-
-    const toggleIngredient = useCallback((id: string) => {
-        setIngredients(prev => prev.map(i => i.id === id ? { ...i, inStock: !i.inStock } : i));
-    }, []);
-
-    const addIngredient = useCallback((name: string, category: IngredientCategory) => {
-        const newIng: Ingredient = { id: generateMenuId(), name, category, inStock: true };
-        setIngredients(prev => [...prev, newIng]);
-    }, []);
-
-    const deleteIngredient = useCallback((id: string) => {
-        setIngredients(prev => prev.filter(i => i.id !== id));
-    }, []);
-    
-    const toggleAvailability = useCallback((id: string) => {
-        setMenu(prev => prev.map(i => i.id === id ? { ...i, available: !i.available } : i));
-    }, []);
-
-    const addMenuItem = useCallback((item: MenuItem) => {
-        setMenu(prev => {
-            const existingIdx = prev.findIndex(i => i.id === item.id);
-            if (existingIdx >= 0) {
-                const updated = [...prev];
-                updated[existingIdx] = item;
-                return updated;
-            }
-            return [...prev, item];
-        });
-    }, []);
-
-    const deleteMenuItem = useCallback((id: string) => {
-        setMenu(prev => prev.filter(i => i.id !== id));
-    }, []);
-
-    return (
-        <>
-            {view === 'customer' && (
-                <CustomerView 
-                    menu={menu} 
-                    cart={cart} 
-                    addToCart={addToCart} 
-                    updateCartQty={updateCartQty} 
-                    clearCart={clearCart} 
-                    placeOrder={placeOrder} 
-                    onNavigate={(target) => { setLoginTarget(target); setView('login'); }} 
-                />
-            )}
-            {view === 'confirmation' && lastOrder && (
-                <OrderConfirmationView order={lastOrder} onBack={() => { setLastOrder(null); setView('customer'); }} />
-            )}
-            {view === 'login' && loginTarget && (
-                <LoginView 
-                    target={loginTarget} 
-                    onLogin={() => { setView(loginTarget); setLoginTarget(null); }} 
-                    onBack={() => setView('customer')} 
-                />
-            )}
-            {view === 'kitchen' && (
-                <KitchenView 
-                    orders={orders} 
-                    setOrders={setOrders} 
-                    setView={setView} 
-                    ingredients={ingredients}
-                    toggleIngredient={toggleIngredient}
-                    addIngredient={addIngredient}
-                    deleteIngredient={deleteIngredient}
-                    menu={menu}
-                    toggleAvailability={toggleAvailability}
-                />
-            )}
-            {view === 'admin' && (
-                <AdminView 
-                    orders={orders} 
-                    setOrders={setOrders} 
-                    setView={setView} 
-                    menu={menu}
-                    setMenu={setMenu}
-                    toggleAvailability={toggleAvailability}
-                    ingredients={ingredients}
-                    toggleIngredient={toggleIngredient}
-                    addIngredient={addIngredient}
-                    deleteIngredient={deleteIngredient}
-                    addMenuItem={addMenuItem}
-                    deleteMenuItem={deleteMenuItem}
-                    inventory={inventory}
-                    setInventory={setInventory}
-                    purchaseLogs={purchaseLogs}
-                    setPurchaseLogs={setPurchaseLogs}
-                    usageLogs={usageLogs}
-                    setUsageLogs={setUsageLogs}
-                    events={events}
-                    setEvents={setEvents}
-                />
-            )}
-            {view === 'printable' && (
-                <PrintableMenu menu={menu} setView={setView} />
-            )}
-        </>
-    );
-};
-
-const root = createRoot(document.getElementById('root')!);
-root.render(<App />);
