@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
@@ -48,12 +49,13 @@ import {
   List,
   Activity,
   TrendingUp,
-  Bed
+  Bed,
+  ArrowUp
 } from 'lucide-react';
 
 // --- Types ---
 
-type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)' | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Breads' | 'Stay';
+type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)' | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
 
 interface Ingredient {
   id: string;
@@ -110,26 +112,6 @@ interface InventoryItem {
     cost: number;
     supplier: string;
     status: 'Good' | 'Needs Replacement' | 'Damaged';
-}
-
-interface PurchaseLog {
-    id: string;
-    date: string;
-    item: string;
-    quantity: number;
-    cost: number;
-    supplier: string;
-    area: string;
-    invoiceNumber: string;
-}
-
-interface CalendarEvent {
-    id: string;
-    title: string;
-    date: string;
-    priority: 'High' | 'Medium' | 'Low';
-    category: 'Operations' | 'Maintenance' | 'Events' | 'Staff' | 'Inventory';
-    status: 'Pending' | 'In Progress' | 'Completed';
 }
 
 // --- Constants & Data ---
@@ -639,6 +621,60 @@ const OrderConfirmation = ({ orderId, estimatedTime, status, onBack }: { orderId
     );
 };
 
+const ScrollToTop = () => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    const toggleVisibility = () => {
+        if (window.pageYOffset > 300) {
+            setIsVisible(true);
+        } else {
+            setIsVisible(false);
+        }
+    };
+
+    const scrollToTop = () => {
+        // Find the main scrollable container
+        const mainContainer = document.querySelector('.custom-scrollbar.flex-1.min-h-0.min-w-0');
+        if (mainContainer) {
+            mainContainer.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        } else {
+             window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    useEffect(() => {
+        const mainContainer = document.querySelector('.custom-scrollbar.flex-1.min-h-0.min-w-0');
+        if(mainContainer) {
+            mainContainer.addEventListener('scroll', () => {
+                if (mainContainer.scrollTop > 300) setIsVisible(true);
+                else setIsVisible(false);
+            });
+        } else {
+            window.addEventListener('scroll', toggleVisibility);
+        }
+
+        return () => {
+            window.removeEventListener('scroll', toggleVisibility);
+        };
+    }, []);
+
+    return (
+        <div className={`fixed bottom-24 right-6 z-40 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <button 
+                onClick={scrollToTop}
+                className="p-3 bg-cyan-500 hover:bg-cyan-400 text-black rounded-full shadow-[0_0_15px_rgba(6,182,212,0.6)] transition-transform hover:scale-110"
+            >
+                <ArrowUp size={24} />
+            </button>
+        </div>
+    );
+};
 
 const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity, onPlaceOrder, onNavigate, activeCategory, setActiveCategory }: any) => {
     const [sortBy, setSortBy] = useState<'price' | 'time'>('price');
@@ -672,7 +708,7 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
         return () => observer.disconnect();
     }, [setActiveCategory]);
 
-    const sortedMenu = useMemo(() => {
+    const sortedMenu = useMemo((): {[key: string]: MenuItem[]} => {
         let filtered = menu.filter((item: MenuItem) => 
             item.available && 
             item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -852,7 +888,8 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
                                 {React.cloneElement(getCategoryIcon(category) as any, { size: 24, className: `text-[${getCategoryTheme(category)}]` })}
                                 {category}
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                            {/* UPDATED GRID: grid-cols-2 on mobile (was grid-cols-1) */}
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                                 {items.map((item: MenuItem) => {
                                     const themeColor = getCategoryTheme(category);
                                     return (
@@ -1500,77 +1537,55 @@ const CalendarPlanner = () => {
 
 const MenuEditorModal = ({ menu, onClose }: any) => (
     <div className="bg-zinc-900 p-6 rounded-xl border border-white/10">
-        <div className="flex justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">Menu Editor</h2>
-            <button onClick={onClose}><X className="text-gray-400" /></button>
-        </div>
-        <p className="text-gray-500">Menu editing interface placeholder.</p>
+        <h2 className="text-xl font-bold text-white mb-4">Edit Menu</h2>
+        <p className="text-gray-400">Feature coming soon.</p>
+        <button onClick={onClose} className="mt-4 px-4 py-2 bg-zinc-800 text-white rounded">Close</button>
     </div>
 );
 
-const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => (
-    <div className="p-8 bg-white text-black min-h-screen">
-        <h1 className="text-4xl font-bold text-center mb-8">Skylark Café Menu</h1>
-        <div className="grid grid-cols-2 gap-8">
-            {menu.map(item => (
-                <div key={item.id} className="border-b pb-2">
-                    <div className="flex justify-between font-bold text-lg">
-                        <span>{item.name}</span>
-                        <span>₹{item.price}</span>
-                    </div>
-                    <p className="text-gray-600">{item.description}</p>
-                </div>
-            ))}
-        </div>
-    </div>
-);
-
-const ScrollToTop = () => {
-    const [isVisible, setIsVisible] = useState(false);
-    
-    useEffect(() => {
-        const toggleVisibility = () => {
-            if (window.scrollY > 300 || document.querySelector('.overflow-y-auto')?.scrollTop! > 300) {
-                setIsVisible(true);
-            } else {
-                setIsVisible(false);
-            }
-        };
-
-        window.addEventListener('scroll', toggleVisibility);
-        const scrollContainer = document.querySelector('.overflow-y-auto');
-        if(scrollContainer) scrollContainer.addEventListener('scroll', toggleVisibility);
-
-        return () => {
-            window.removeEventListener('scroll', toggleVisibility);
-             if(scrollContainer) scrollContainer.removeEventListener('scroll', toggleVisibility);
-        };
-    }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const scrollContainer = document.querySelector('.overflow-y-auto');
-        if(scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    if (!isVisible) return null;
+const PrintableMenu = ({ menu }: { menu: MenuItem[] }) => {
+    const grouped = useMemo(() => {
+        const g: {[key: string]: MenuItem[]} = {};
+        menu.forEach(i => {
+            if(!g[i.category]) g[i.category] = [];
+            g[i.category].push(i);
+        });
+        return g;
+    }, [menu]);
 
     return (
-        <button 
-            onClick={scrollToTop} 
-            className="fixed bottom-24 right-4 md:bottom-8 md:right-8 p-3 bg-cyan-500 text-black rounded-full shadow-lg hover:bg-cyan-400 transition-all z-50 animate-fade-in"
-        >
-            <ChevronUp size={24} />
-        </button>
+        <div className="p-8 bg-white text-black min-h-screen font-serif">
+            <h1 className="text-4xl font-bold text-center mb-2 uppercase tracking-widest">Skylark Café</h1>
+            <p className="text-center text-sm text-gray-500 mb-8 uppercase tracking-widest">Kasol | Himachal Pradesh</p>
+            <div className="columns-2 md:columns-3 gap-8 space-y-8">
+                {Object.entries(grouped).map(([cat, items]) => (
+                    <div key={cat} className="break-inside-avoid mb-6">
+                        <h2 className="text-lg font-bold border-b-2 border-black mb-3 uppercase">{cat}</h2>
+                        <ul className="space-y-1">
+                            {items.map(i => (
+                                <li key={i.id} className="flex justify-between text-sm">
+                                    <span>{i.name}</span>
+                                    <span className="font-bold">₹{i.price}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 };
 
-const Toast = ({ message, visible }: { message: string, visible: boolean }) => {
-    if (!visible) return null;
+const Toast = ({ message, onClose }: { message: string, onClose: () => void }) => {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 3000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
     return (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-black px-6 py-3 rounded-full font-bold shadow-[0_0_20px_rgba(34,197,94,0.5)] z-[60] animate-fade-in flex items-center gap-2">
-            <CheckCircle size={20} />
-            {message}
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 animate-fade-in">
+            <CheckCircle size={20} className="text-green-500" />
+            <span className="font-medium">{message}</span>
         </div>
     );
 };
@@ -1578,150 +1593,94 @@ const Toast = ({ message, visible }: { message: string, visible: boolean }) => {
 // --- Main App Component ---
 
 const App = () => {
-    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'login' | 'order-confirmation' | 'printable'>('customer');
-    const [cart, setCart] = useState<CartItem[]>([]);
-    const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
-    const [orders, setOrders] = useState<Order[]>(() => {
-        const saved = localStorage.getItem('skylark_orders');
-        return saved ? JSON.parse(saved, (key, value) => key === 'timestamp' ? new Date(value) : value) : [];
-    });
-    const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
-    const [authTarget, setAuthTarget] = useState<'kitchen' | 'admin'>('kitchen');
+    const [view, setView] = useState<'customer' | 'kitchen' | 'admin' | 'printable' | 'login'>('customer');
     const [menu, setMenu] = useState<MenuItem[]>(buildMenu());
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>(MASTER_INGREDIENTS);
-    const [activeCategory, setActiveCategory] = useState('Burgers');
-    const [toastMessage, setToastMessage] = useState('');
-    const [showToast, setShowToast] = useState(false);
+    const [activeCategory, setActiveCategory] = useState('Maggi');
+    const [authTarget, setAuthTarget] = useState<'kitchen' | 'admin' | null>(null);
+    const [toastMsg, setToastMsg] = useState('');
+    
+    // Order Flow State
+    const [isPlaceOrderOpen, setIsPlaceOrderOpen] = useState(false);
+    const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+    const [currentOrderTime, setCurrentOrderTime] = useState(0);
+    const [currentOrderStatus, setCurrentOrderStatus] = useState<Order['status']>('pending');
 
-    // NEW HOOK: Prevent accidental tab closure
+    // Persistent Auth
     useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            e.returnValue = ''; // Chrome requires returnValue to be set
-            return ''; // Some browsers show custom message
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, []);
-
-    // Check for persistent login
-    useEffect(() => {
-        const auth = localStorage.getItem('skylark_auth');
-        if (auth) {
-            const { type } = JSON.parse(auth);
-            // Auto-redirect if on customer view and auth exists? 
-            // For now, we just know the user is logged in. 
-            // Or we can auto-redirect:
-            // if (view === 'customer') setView(type); 
-            // But maybe they want to order food. Let's just use it for quick access.
+        const savedAuth = localStorage.getItem('skylark_auth');
+        if (savedAuth) {
+            const { type } = JSON.parse(savedAuth);
+            // Auto-redirect if on customer view initially? 
+            // Or just keep session valid. Let's just store it.
         }
     }, []);
 
-    // Save orders to local storage whenever they change
+    // Exit Confirmation
     useEffect(() => {
-        localStorage.setItem('skylark_orders', JSON.stringify(orders));
-    }, [orders]);
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = ''; 
+        return ''; 
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, []);
 
-    // Ingredient Logic: Update Menu Availability based on Ingredients
+    // Ingredient Logic
     useEffect(() => {
-        const updatedMenu = menu.map(item => {
-            const missing = item.requiredIngredients.filter(reqId => {
-                const ing = ingredients.find(i => i.id === reqId);
+        const newMenu = menu.map(item => {
+            const missing = item.requiredIngredients.filter(ingId => {
+                const ing = ingredients.find(i => i.id === ingId);
                 return ing && !ing.inStock;
             });
-            
-            // If item was manually set to unavailable, keep it unavailable? 
-            // For now, let's allow ingredient logic to override ONLY if stock is missing.
-            // If ingredients are OK, we trust the manual 'available' toggle or default true.
-            // Actually, simpler: If missing > 0, available = false. Else keep current.
-            if (missing.length > 0) {
-                return { ...item, available: false, missingIngredients: missing };
-            } else {
-                // Check if it was disabled due to ingredients previously
-                if (item.missingIngredients && item.missingIngredients.length > 0) {
-                     return { ...item, available: true, missingIngredients: [] };
-                }
-                return { ...item, missingIngredients: [] };
-            }
+            return { ...item, available: missing.length === 0, missingIngredients: missing };
         });
-        // Only set if changed to avoid loop
-        if (JSON.stringify(updatedMenu) !== JSON.stringify(menu)) {
-            setMenu(updatedMenu);
+        // Only update if changed to prevent loops
+        if(JSON.stringify(newMenu) !== JSON.stringify(menu)) {
+            setMenu(newMenu);
         }
-    }, [ingredients]); // Depend on ingredients
-
+    }, [ingredients]);
 
     const handleAddToCart = (item: MenuItem) => {
         setCart(prev => {
             const existing = prev.find(i => i.id === item.id);
-            if (existing) {
-                return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
-            }
+            if (existing) return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
             return [...prev, { ...item, quantity: 1 }];
         });
-        setToastMessage(`Added ${item.name} to cart`);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
+        setToastMsg(`Added ${item.name} to cart`);
     };
 
     const handleUpdateCartQuantity = (itemId: string, delta: number) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === itemId) {
-                return { ...item, quantity: Math.max(0, item.quantity + delta) };
-            }
-            return item;
-        }).filter(item => item.quantity > 0));
-    };
-
-    const calculatePrepTime = (items: CartItem[]) => {
-        if (items.length === 0) return 0;
-        const maxTime = Math.max(...items.map(i => i.prepTime));
-        const buffer = items.length * 2; // 2 mins per extra item
-        return maxTime + buffer;
+        setCart(prev => prev.map(i => i.id === itemId ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
     };
 
     const handlePlaceOrder = (info: CustomerInfo) => {
         const newOrder: Order = {
             id: Date.now().toString(),
-            items: [...cart],
+            items: cart,
             total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
             status: 'pending',
             timestamp: new Date(),
             customerInfo: info,
-            estimatedTime: calculatePrepTime(cart)
+            estimatedTime: 25 // dynamic calc could be added
         };
-        setOrders(prev => [newOrder, ...prev]);
+        setOrders(prev => [...prev, newOrder]);
         setCart([]);
         setCurrentOrderId(newOrder.id);
-        setView('order-confirmation');
+        setCurrentOrderStatus('pending');
+        setCurrentOrderTime(newOrder.estimatedTime || 25);
     };
 
-    const handleLogin = (type: 'kitchen' | 'admin', save: boolean) => {
-        if (save) {
-            localStorage.setItem('skylark_auth', JSON.stringify({ 
-                type, 
-                username: type === 'kitchen' ? 'skylarkcafe' : 'skylark',
-                timestamp: new Date().getTime() 
-            }));
-        }
-        setView(type);
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('skylark_auth');
-        setView('customer');
-    };
-
-    const updateOrderStatus = (orderId: string, status: Order['status']) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    const updateOrderStatus = (id: string, status: Order['status']) => {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+        if(currentOrderId === id) setCurrentOrderStatus(status);
     };
 
     const updateStockStatus = (itemId: string) => {
-        setMenu(prev => prev.map(m => m.id === itemId ? { ...m, available: !m.available } : m));
+        setMenu(prev => prev.map(i => i.id === itemId ? { ...i, available: !i.available } : i));
     };
 
     const updateIngredientStatus = (ingId: string) => {
@@ -1729,9 +1688,9 @@ const App = () => {
     };
 
     const handleNavigate = (target: 'kitchen' | 'admin') => {
-        const auth = localStorage.getItem('skylark_auth');
-        if (auth) {
-            const { type } = JSON.parse(auth);
+        const savedAuth = localStorage.getItem('skylark_auth');
+        if (savedAuth) {
+            const { type } = JSON.parse(savedAuth);
             if (type === target) {
                 setView(target);
                 return;
@@ -1741,25 +1700,46 @@ const App = () => {
         setView('login');
     };
 
+    const handleLogin = (type: 'kitchen' | 'admin', remember: boolean) => {
+        if (remember) {
+            localStorage.setItem('skylark_auth', JSON.stringify({ type, timestamp: Date.now() }));
+        }
+        setView(type);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('skylark_auth');
+        setView('customer');
+    };
+
     return (
         <>
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { bg: #18181b; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #52525b; }
+                .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.4); }
             `}</style>
-            
-            {view === 'customer' && (
+
+            {view === 'customer' && !currentOrderId && (
                 <CustomerView 
                     menu={menu} 
                     cart={cart} 
                     onAddToCart={handleAddToCart} 
-                    onUpdateCartQuantity={handleUpdateCartQuantity}
+                    onUpdateCartQuantity={handleUpdateCartQuantity} 
                     onPlaceOrder={() => setIsPlaceOrderOpen(true)}
                     onNavigate={handleNavigate}
                     activeCategory={activeCategory}
                     setActiveCategory={setActiveCategory}
+                />
+            )}
+
+            {view === 'customer' && currentOrderId && (
+                <OrderConfirmation 
+                    orderId={currentOrderId} 
+                    estimatedTime={currentOrderTime} 
+                    status={currentOrderStatus} 
+                    onBack={() => setCurrentOrderId(null)} 
                 />
             )}
 
@@ -1770,11 +1750,11 @@ const App = () => {
             {view === 'kitchen' && (
                 <KitchenView 
                     orders={orders} 
-                    menu={menu}
+                    menu={menu} 
+                    ingredients={ingredients} 
+                    missingIngredients={[]}
                     updateOrderStatus={updateOrderStatus} 
-                    updateStockStatus={updateStockStatus}
-                    missingIngredients={menu.filter(m => !m.available && m.missingIngredients?.length)} 
-                    ingredients={ingredients}
+                    updateStockStatus={updateStockStatus} 
                     updateIngredientStatus={updateIngredientStatus}
                     onLogout={handleLogout}
                 />
@@ -1784,18 +1764,9 @@ const App = () => {
                 <AdminView 
                     orders={orders} 
                     menu={menu} 
+                    setMenu={setMenu}
                     updateOrderStatus={updateOrderStatus} 
                     onLogout={handleLogout}
-                    setMenu={setMenu}
-                />
-            )}
-
-            {view === 'order-confirmation' && currentOrderId && (
-                <OrderConfirmation 
-                    orderId={currentOrderId} 
-                    estimatedTime={orders.find(o => o.id === currentOrderId)?.estimatedTime || 20}
-                    status={orders.find(o => o.id === currentOrderId)?.status || 'pending'}
-                    onBack={() => setView('customer')} 
                 />
             )}
 
@@ -1806,8 +1777,8 @@ const App = () => {
                 onClose={() => setIsPlaceOrderOpen(false)} 
                 onSubmit={handlePlaceOrder} 
             />
-
-            <Toast message={toastMessage} visible={showToast} />
+            
+            {toastMsg && <Toast message={toastMsg} onClose={() => setToastMsg('')} />}
         </>
     );
 };
