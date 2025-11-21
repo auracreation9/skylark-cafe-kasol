@@ -1635,22 +1635,67 @@ const App = () => {
     }, []);
 
     // Persist Orders
-    useEffect(() => {
+useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        // Load orders from Supabase
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, order_items(*)')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data) {
+          // Transform Supabase data to app format
+          const transformedOrders: Order[] = data.map((order: any) => ({
+            id: order.id,
+            items: order.order_items.map((item: any) => ({
+              id: item.item_id,
+              name: item.item_name,
+              price: item.price,
+              quantity: item.quantity,
+              category: item.category,
+              prepTime: 10, // Default prep time
+              available: true,
+              isVeg: true // Default, adjust based on your data
+            })),
+            total: order.total,
+            status: order.status as Order['status'],
+            timestamp: new Date(order.created_at),
+            customerInfo: {
+              name: order.customer_name,
+              phone: order.customer_phone,
+              email: order.customer_email || undefined,
+              tableNumber: order.table_number || undefined
+            },
+            estimatedTime: order.estimated_time
+          }));
+
+          setOrders(transformedOrders);
+        }
+      } catch (error) {
+        console.error('Error loading orders from Supabase:', error);
+        // Fallback to localStorage if Supabase fails
         const savedOrders = localStorage.getItem('skylark_orders');
         if (savedOrders) {
-            try {
-                const parsed = JSON.parse(savedOrders);
-                // Restore Date objects
-                parsed.forEach((o: any) => o.timestamp = new Date(o.timestamp));
-                setOrders(parsed);
-            } catch (e) { console.error("Failed to load orders", e); }
+          try {
+            const parsed = JSON.parse(savedOrders);
+            parsed.forEach((o: any) => o.timestamp = new Date(o.timestamp));
+            setOrders(parsed);
+          } catch (e) {
+            console.error('Failed to load orders from localStorage', e);
+          }
         }
-    }, []);
+      }
+    };
 
-    useEffect(() => {
-        localStorage.setItem('skylark_orders', JSON.stringify(orders));
-    }, [orders]);
-
+    loadOrders();
+  }, []);
+// Persist orders to localStorage (disabled - now using Supabase)
+  // useEffect(() => {
+  //   localStorage.setItem('skylark_orders', JSON.stringify(orders));
+  // }, [orders]);
     // Auth Persistence
     useEffect(() => {
         const auth = localStorage.getItem('skylark_auth');
