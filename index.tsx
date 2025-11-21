@@ -179,6 +179,7 @@ const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] 
     ['Pizza Paratha', 280, '20 mins', 'Fusion paratha with pizza fillings'],
     ['Butter Roti', 50, '10 mins', 'Soft wheat flatbread with butter'],
     ['Plain Roti', 40, '10 mins', 'Traditional soft wheat flatbread'] ,
+        ],
     'Maggi': [
     ['Plain Maggi', 90, '10 mins', 'Classic comfort food'],
     ['Cheese Maggi', 140, '10 mins', 'Loaded with grated cheese'],
