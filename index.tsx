@@ -100,7 +100,7 @@ interface Order {
   customerInfo: CustomerInfo;
   estimatedTime?: number; // minutes
 }
-181interface InventoryItem {
+interface InventoryItem {
     id: string;
     name: string;
     quantity: number;
