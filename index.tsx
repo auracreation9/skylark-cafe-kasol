@@ -54,7 +54,7 @@ import {
 
 // --- Types ---
 
-type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 167
+type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)'
   | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
 
 interface Ingredient {
