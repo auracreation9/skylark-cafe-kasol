@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { supabase } from './supabaseClient';
 import { 
   ChefHat, 
   ShoppingCart, 
@@ -1720,31 +1721,85 @@ const App = () => {
         setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
     };
 
-    const placeOrder = (customerInfo: CustomerInfo) => {
-        // Calculate Estimated Time
-        let maxTime = 0;
-        let penalty = 0;
-        cart.forEach(item => {
-            if (item.prepTime > maxTime) maxTime = item.prepTime;
-            if (!item.isVeg) penalty = 5;
-        });
-        const estimatedTime = maxTime + penalty + 5; // +5 buffer
+const placeOrder = async (customerInfo: CustomerInfo) => {
+    try {
+      // Calculate Estimated Time
+      let maxTime = 0;
+      let penalty = 0;
+      cart.forEach(item => {
+        if (item.prepTime > maxTime) maxTime = item.prepTime;
+        if (!item.isVeg) penalty = 5;
+      });
+      const estimatedTime = maxTime + penalty + 5; // +5 buffer
 
-        const newOrder: Order = {
-            id: Date.now().toString(),
-            items: [...cart],
-            total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
-            status: 'pending',
-            timestamp: new Date(),
-            customerInfo: customerInfo,
-            estimatedTime
-        };
-        setOrders(prev => [newOrder, ...prev]);
-        setCart([]);
-        setCurrentOrder(newOrder);
-        setView('order-confirmation');
-    };
+      const orderTotal = cart.reduce((a, b) => a + (b.price * b.quantity), 0);
 
+      // Insert order into Supabase
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          customer_name: customerInfo.name,
+          customer_phone: customerInfo.phone,
+          customer_email: customerInfo.email || null,
+          table_number: customerInfo.tableNumber || null,
+          total: orderTotal,
+          status: 'pending',
+          estimated_time: estimatedTime
+        }])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items
+      const orderItems = cart.map(item => ({
+        order_id: orderData.id,
+        item_id: item.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        category: item.category
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Transform Supabase order to app format
+      const newOrder: Order = {
+        id: orderData.id,
+        items: [...cart],
+        total: orderTotal,
+        status: 'pending',
+        timestamp: new Date(orderData.created_at),
+        customerInfo,
+        estimatedTime
+      };
+
+      setOrders(prev => [newOrder, ...prev]);
+      setCart([]);
+      setCurrentOrder(newOrder);
+      setView('order-confirmation');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      // Fallback to local storage if Supabase fails
+      const newOrder: Order = {
+        id: Date.now().toString(),
+        items: [...cart],
+        total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
+        status: 'pending',
+        timestamp: new Date(),
+        customerInfo,
+        estimatedTime: cart.reduce((max, item) => Math.max(max, item.prepTime), 0) + 5
+      };
+      setOrders(prev => [newOrder, ...prev]);
+      setCart([]);
+      setCurrentOrder(newOrder);
+      setView('order-confirmation');
+    }
+  };
     const updateOrderStatus = (id: string, status: Order['status']) => {
         setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
         if (currentOrder && currentOrder.id === id) {
