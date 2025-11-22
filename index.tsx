@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import { 
   ChefHat, 
   ShoppingCart, 
@@ -12,7 +13,6 @@ import {
   Plus, 
   Minus, 
   ChevronRight, 
-  Star, 
   UtensilsCrossed, 
   Coffee, 
   Flame, 
@@ -50,13 +50,47 @@ import {
   Activity,
   TrendingUp,
   Bed,
-  ArrowUp
+  ArrowUp,
+  Star
 } from 'lucide-react';
+
+// --- SUPABASE CONFIGURATION ---
+// REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+const SUPABASE_URL = 'https://yqzelhilozltjlahbtsi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxemVsaGlsb3psdGpsYWhidHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzkyODQsImV4cCI6MjA0ODQ1NTI4NH0.4J7ptQw2udURR7O6paB49x0cuG9RNyZQgrSbdVj_IVo';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/*
+  REQUIRED SQL SETUP FOR SUPABASE:
+  Run this in your Supabase SQL Editor:
+
+  create table public.orders (
+    id uuid default gen_random_uuid() primary key,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    customer_name text not null,
+    customer_phone text not null,
+    service_type text not null,
+    table_number text,
+    total_amount numeric not null,
+    status text not null default 'pending',
+    estimated_time numeric
+  );
+
+  create table public.order_items (
+    id uuid default gen_random_uuid() primary key,
+    order_id uuid references public.orders(id) not null,
+    item_name text not null,
+    item_price numeric not null,
+    quantity numeric not null,
+    category text,
+    is_veg boolean
+  );
+*/
 
 // --- Types ---
 
-type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)'
-  | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
+type Category = 'Breakfast' | 'Maggi' | 'Salad' | 'Raita' | 'Rice' | 'Noodles' | 'Main Course' | 'Tandoor' | 'Chinese' | 'Soups' | 'Fries' | 'Beverages (Cold)' | 'Beverages (Hot)' | 'Shakes/Lassi' | 'Desserts' | 'Eggs' | 'Non-Veg Main' | 'Mutton' | 'Burgers' | 'Pasta' | 'Momos' | 'Pizza' | 'Breads' | 'Stay';
 
 interface Ingredient {
   id: string;
@@ -101,6 +135,7 @@ interface Order {
   customerInfo: CustomerInfo;
   estimatedTime?: number; // minutes
 }
+
 interface InventoryItem {
     id: string;
     name: string;
@@ -165,27 +200,25 @@ const getIngIds = (names: string[]): string[] => {
 }
 
 const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] } = {
-  'Beverages (Hot)': [
-    ['Masala Chai', 50, '5 mins', 'Spiced Indian tea'],
-    ['Hot Coffee', 80, '5 mins', 'Steaming hot cappuccino']
-  ],
   'Breakfast': [
-    ['Butter Toast', 90, '10 mins', 'Crispy toast served with generous butter'],    ['Nutella Sandwich', 160, '10 mins', 'Loaded with creamy Nutella spread'],
+    ['Butter Toast', 80, '10 mins', 'Crispy toast served with generous butter'],
+    ['Nutella Sandwich', 160, '10 mins', 'Loaded with creamy Nutella spread'],
     ['Cheese Toast', 120, '10 mins', 'Topped with melted mozzarella cheese'],
-    ['Aloo Paratha', 180, '15 mins', 'Stuffed with spiced mashed potatoes'],    ['Mix Veg Paratha', 120, '15 mins', 'Stuffed with mixed vegetables'],
-    ['Mix Veg Paratha', 200, '15 mins', 'Stuffed with mixed vegetables'],
-    ['Paneer Paratha', 220, '15 mins', 'Stuffed with fresh spiced paneer'],
-    ['Gobhi Paratha', 180, '15 mins', 'Stuffed with spiced cauliflower'],
-    ['Pizza Paratha', 280, '20 mins', 'Fusion paratha with pizza fillings'],
-    ['Butter Roti', 50, '10 mins', 'Soft wheat flatbread with butter'],
-    ['Plain Roti', 40, '10 mins', 'Traditional soft wheat flatbread'] ,
-        ],
-    'Maggi': [
-    ['Plain Maggi', 90, '10 mins', 'Classic comfort food'],
-    ['Cheese Maggi', 140, '10 mins', 'Loaded with grated cheese'],
-    ['Vegetable Maggi', 120, '15 mins', 'Cooked with fresh garden veggies'],
+    ['Aloo Paratha', 100, '15 mins', 'Stuffed with spiced mashed potatoes'],
+    ['Mix Veg Paratha', 120, '15 mins', 'Stuffed with mixed vegetables'],
+    ['Paneer Paratha', 140, '15 mins', 'Stuffed with fresh spiced paneer'],
+    ['Gobhi Paratha', 120, '15 mins', 'Stuffed with spiced cauliflower'],
+    ['Pizza Paratha', 160, '20 mins', 'Fusion paratha with pizza fillings'],
+    ['Butter Roti', 30, '5 mins', 'Soft wheat flatbread with butter'],
+    ['Plain Roti', 20, '5 mins', 'Traditional soft wheat flatbread']
+  ],
+  'Maggi': [
+    ['Plain Maggi', 80, '10 mins', 'Classic comfort food'],
+    ['Cheese Maggi', 120, '10 mins', 'Loaded with grated cheese'],
+    ['Vegetable Maggi', 100, '15 mins', 'Cooked with fresh garden veggies'],
     ['Egg Maggi', 140, '15 mins', 'Classic Maggi with scrambled eggs'],
-    ['Chicken Maggi', 200, '20 mins', 'Maggi with tender chicken chunks']  ],
+    ['Chicken Maggi', 200, '20 mins', 'Maggi with tender chicken chunks']
+  ],
   'Salad': [
     ['Mix Veg Salad', 100, '10 mins', 'Fresh seasonal vegetables'],
     ['Onion Salad', 60, '5 mins', 'Sliced onions with lemon and spices'],
@@ -264,6 +297,10 @@ const RAW_MENU_DATA: { [key in Category]?: [string, number, string?, string?][] 
     ['Fresh Lime Soda', 160, '5 mins', 'Classic lemon soda'],
     ['Coconut Water', 120, '5 mins', 'Fresh tender coconut water'],
     ['Cold Coffee', 240, '10 mins', 'Chilled creamy coffee']
+  ],
+  'Beverages (Hot)': [
+      ['Hot Coffee', 160, '10 mins', 'Steaming hot cappuccino'],
+      ['Masala Chai', 80, '10 mins', 'Spiced Indian tea']
   ],
   'Shakes/Lassi': [
     ['Banana Shake', 200, '10 mins', 'Creamy fresh banana shake'],
@@ -846,6 +883,10 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
     const scrollSidebar = (amount: number) => {
         sidebarRef.current?.scrollBy({ top: amount, behavior: 'smooth' });
     };
+    
+    const handleInstallApp = () => {
+        alert("PWA Install feature is available on Android.");
+    };
 
     // Scroll Spy
     useEffect(() => {
@@ -864,7 +905,7 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
     const sortedMenu = useMemo((): {[key: string]: MenuItem[]} => {
         let filtered = menu.filter((item: MenuItem) => 
             item.available && 
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            (item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase()) || item.category.toLowerCase().includes(searchTerm.toLowerCase())) &&
             (!vegOnly || item.isVeg)
         );
 
@@ -985,6 +1026,9 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
 
                 {/* Sidebar Footer Controls */}
                 <div className="p-4 bg-black border-t border-white/10 space-y-3 z-20">
+                    <button onClick={handleInstallApp} className="w-full py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-600/50 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                        <Download size={14} /> Install App
+                    </button>
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 text-gray-500" size={16} />
                         <input
@@ -1101,10 +1145,10 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
 
                                             <div className="flex justify-between items-start relative z-10">
                                                 <div className="flex gap-2">
-                                                    <div className={`w-3 h-3 rounded-full mt-1 ${item.isVeg ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
+                                                    <div className={`w-3 h-3 rounded-full mt-1.5 ${item.isVeg ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`} />
                                                     <div>
-                                                        <h3 className="font-bold text-base md:text-lg leading-tight text-white group-hover:text-cyan-400 transition-colors">{item.name}</h3>
-                                                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{item.description}</p>
+                                                        <h3 className="font-bold text-xl md:text-2xl leading-tight text-white group-hover:text-cyan-400 transition-colors">{item.name}</h3>
+                                                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">{item.description}</p>
                                                     </div>
                                                 </div>
                                                 {/* ADD Button Top Right */}
@@ -1163,8 +1207,8 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
     const [isStockModalOpen, setIsStockModalOpen] = useState(false);
     const [isInvModalOpen, setIsInvModalOpen] = useState(false);
 
-    const pendingOrders = orders.filter((o: Order) => o.status === 'pending');
-    const prepOrders = orders.filter((o: Order) => o.status === 'preparing');
+    const pendingOrders = (orders as Order[]).filter((o: Order) => o.status === 'pending');
+    const prepOrders = (orders as Order[]).filter((o: Order) => o.status === 'preparing');
 
     return (
         <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
@@ -1231,7 +1275,7 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                                         <span className={`text-sm ${item.isVeg ? 'text-green-300' : 'text-red-300'}`}>{item.name}</span>
                                                         {hasMissing && (
                                                             <p className="text-[10px] text-red-400 font-bold flex items-center gap-1">
-                                                                <AlertCircle size={10} /> Missing: {liveItem?.missingIngredients?.map((mid: string) => ingredients.find((i: Ingredient) => i.id === mid)?.name).join(', ')}
+                                                                <AlertCircle size={10} /> Missing: {(liveItem?.missingIngredients as string[])?.map((mid: string) => ingredients.find((i: Ingredient) => i.id === mid)?.name).join(', ')}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1302,19 +1346,19 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
     const [searchTerm, setSearchTerm] = useState('');
 
     // Calculate Stats
-    const totalRevenue = useMemo(() => orders.filter((o: Order) => o.status === 'completed').reduce((acc: number, curr: Order) => acc + curr.total, 0), [orders]);
-    const completedOrders = useMemo(() => orders.filter((o: Order) => o.status === 'completed').length, [orders]);
-    const activeOrders = useMemo(() => orders.filter((o: Order) => o.status !== 'completed' && o.status !== 'cancelled').length, [orders]);
+    const totalRevenue = useMemo(() => (orders as Order[]).filter((o: Order) => o.status === 'completed').reduce((acc: number, curr: Order) => acc + curr.total, 0), [orders]);
+    const completedOrders = useMemo(() => (orders as Order[]).filter((o: Order) => o.status === 'completed').length, [orders]);
+    const activeOrders = useMemo(() => (orders as Order[]).filter((o: Order) => o.status !== 'completed' && o.status !== 'cancelled').length, [orders]);
     
     // Daily Stats
     const today = new Date().toDateString();
-    const todayOrders = useMemo(() => orders.filter((o: Order) => new Date(o.timestamp).toDateString() === today && o.status === 'completed'), [orders, today]);
+    const todayOrders = useMemo(() => (orders as Order[]).filter((o: Order) => new Date(o.timestamp).toDateString() === today && o.status === 'completed'), [orders, today]);
     const todayRevenue = useMemo(() => todayOrders.reduce((acc: number, curr: Order) => acc + curr.total, 0), [todayOrders]);
 
     // Top Items
     const topItems = useMemo(() => {
         const counts: {[key: string]: number} = {};
-        orders.forEach((o: Order) => {
+        (orders as Order[]).forEach((o: Order) => {
             if(o.status === 'completed') {
                 o.items.forEach((i: CartItem) => {
                     counts[i.name] = (counts[i.name] || 0) + i.quantity;
@@ -1326,7 +1370,7 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
 
     // Filtered Transaction List
     const filteredOrders = useMemo(() => {
-        return orders
+        return (orders as Order[])
             .filter((o: Order) => o.id.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerInfo.name.toLowerCase().includes(searchTerm.toLowerCase()))
             .sort((a: Order, b: Order) => b.timestamp.getTime() - a.timestamp.getTime());
     }, [orders, searchTerm]);
@@ -1443,11 +1487,11 @@ const AdminView = React.memo(({ orders, menu, updateOrderStatus, onLogout, setMe
                     </div>
 
                     {/* Ready for Service Section */}
-                    {orders.filter((o: Order) => o.status === 'ready').length > 0 && (
+                    {(orders as Order[]).filter((o: Order) => o.status === 'ready').length > 0 && (
                         <div className="bg-blue-900/10 border border-blue-500/30 rounded-2xl p-6">
                             <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2"><UtensilsCrossed /> Ready for Service</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {orders.filter((o: Order) => o.status === 'ready').map((order: Order) => (
+                                {(orders as Order[]).filter((o: Order) => o.status === 'ready').map((order: Order) => (
                                     <div key={order.id} className="bg-black p-4 rounded-xl border border-blue-500/20 flex flex-col justify-between h-full">
                                         <div>
                                             <div className="flex justify-between mb-2">
@@ -1635,81 +1679,83 @@ const App = () => {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, []);
 
-    // Persist Orders
-useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        // Load orders from Supabase
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*, order_items(*)')
-          .order('created_at', { ascending: false });
+    // --- SUPABASE LOGIC ---
 
-        if (error) throw error;
-
-        if (data) {
-          // Transform Supabase data to app format
-          const transformedOrders: Order[] = data.map((order: any) => ({
-            id: order.id,
-            items: order.order_items.map((item: any) => ({
-              id: item.item_id,
-              name: item.item_name,
-              price: item.price,
-              quantity: item.quantity,
-              category: item.category,
-              prepTime: 10, // Default prep time
-              available: true,
-              isVeg: true // Default, adjust based on your data
-            })),
-            total: order.total,
-            status: order.status as Order['status'],
-            timestamp: new Date(order.created_at),
-            customerInfo: {
-              name: order.customer_name,
-              phone: order.customer_phone,
-              email: order.customer_email || undefined,
-              tableNumber: order.table_number || undefined
-            },
-            estimatedTime: order.estimated_time
-          }));
-
-          setOrders(transformedOrders);
-        }
-      } catch (error) {
-        console.error('Error loading orders from Supabase:', error);
-        // Fallback to localStorage if Supabase fails
-        const savedOrders = localStorage.getItem('skylark_orders');
-        if (savedOrders) {
-          try {
-            const parsed = JSON.parse(savedOrders);
-            parsed.forEach((o: any) => o.timestamp = new Date(o.timestamp));
-            setOrders(parsed);
-          } catch (e) {
-            console.error('Failed to load orders from localStorage', e);
-          }
-        }
-      }
-    };
-
-    loadOrders();
-  }, []);
-// Persist orders to localStorage (disabled - now using Supabase)
-  // useEffect(() => {
-  //   localStorage.setItem('skylark_orders', JSON.stringify(orders));
-  // }, [orders]);
-    // Auth Persistence
     useEffect(() => {
-        const auth = localStorage.getItem('skylark_auth');
-        if (auth) {
-            try {
-                const { type } = JSON.parse(auth);
-                if (type === 'kitchen' || type === 'admin') {
-                    // Just verify it exists, don't auto-switch unless on root load logic
-                }
-            } catch(e) {}
-        }
+        // Fetch initial orders
+        const fetchOrders = async () => {
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    *,
+                    order_items (*)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                const mappedOrders: Order[] = data.map((o: any) => ({
+                    id: o.id,
+                    items: o.order_items.map((oi: any) => ({
+                        id: 'db_item', // Placeholder ID for DB items
+                        name: oi.item_name,
+                        price: oi.item_price,
+                        quantity: oi.quantity,
+                        category: oi.category as Category,
+                        isVeg: oi.is_veg,
+                        available: true,
+                        description: '',
+                        prepTime: 0,
+                        requiredIngredients: []
+                    })),
+                    total: o.total_amount,
+                    status: o.status,
+                    timestamp: new Date(o.created_at),
+                    customerInfo: {
+                        name: o.customer_name,
+                        phone: o.customer_phone,
+                        serviceType: o.service_type as ServiceType,
+                        tableNumber: o.table_number
+                    },
+                    estimatedTime: o.estimated_time
+                }));
+                setOrders(mappedOrders);
+            }
+        };
+
+        fetchOrders();
+
+        // Real-time subscription
+        const channel = supabase
+            .channel('orders_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                // Simple strategy: Re-fetch all orders on any change to ensure consistency with joined items
+                fetchOrders();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
+    // LocalStorage for Menu & Ingredients (Non-order data)
+    useEffect(() => {
+        const savedMenu = localStorage.getItem('skylark_menu');
+        if (savedMenu) try { setMenu(JSON.parse(savedMenu)); } catch(e) {}
+
+        const savedIng = localStorage.getItem('skylark_ingredients');
+        if (savedIng) try { setIngredients(JSON.parse(savedIng)); } catch(e) {}
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('skylark_menu', JSON.stringify(menu));
+    }, [menu]);
+
+    useEffect(() => {
+        localStorage.setItem('skylark_ingredients', JSON.stringify(ingredients));
+    }, [ingredients]);
+
+    // Auth Persistence
     useEffect(() => {
         const auth = localStorage.getItem('skylark_auth');
         if (auth) {
@@ -1767,90 +1813,69 @@ useEffect(() => {
         setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
     };
 
-const placeOrder = async (customerInfo: CustomerInfo) => {
-    try {
-      // Calculate Estimated Time
-      let maxTime = 0;
-      let penalty = 0;
-      cart.forEach(item => {
-        if (item.prepTime > maxTime) maxTime = item.prepTime;
-        if (!item.isVeg) penalty = 5;
-      });
-      const estimatedTime = maxTime + penalty + 5; // +5 buffer
+    const placeOrder = async (customerInfo: CustomerInfo) => {
+        // Calculate Estimated Time
+        let maxTime = 0;
+        let penalty = 0;
+        cart.forEach(item => {
+            if (item.prepTime > maxTime) maxTime = item.prepTime;
+            if (!item.isVeg) penalty = 5;
+        });
+        const estimatedTime = maxTime + penalty + 5; // +5 buffer
+        const total = cart.reduce((a, b) => a + (b.price * b.quantity), 0);
 
-      const orderTotal = cart.reduce((a, b) => a + (b.price * b.quantity), 0);
+        // Insert into Supabase
+        const { data: orderData, error: orderError } = await supabase.from('orders').insert({
+            customer_name: customerInfo.name,
+            customer_phone: customerInfo.phone,
+            service_type: customerInfo.serviceType,
+            table_number: customerInfo.tableNumber,
+            total_amount: total,
+            status: 'pending',
+            estimated_time: estimatedTime
+        }).select().single();
 
-      // Insert order into Supabase
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          customer_name: customerInfo.name,
-          customer_phone: customerInfo.phone,
-          customer_email: customerInfo.email || null,
-          table_number: customerInfo.tableNumber || null,
-          total: orderTotal,
-          status: 'pending',
-          estimated_time: estimatedTime
-        }])
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Insert order items
-      const orderItems = cart.map(item => ({
-        order_id: orderData.id,
-        item_id: item.id,
-        item_name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        category: item.category
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // Transform Supabase order to app format
-      const newOrder: Order = {
-        id: orderData.id,
-        items: [...cart],
-        total: orderTotal,
-        status: 'pending',
-        timestamp: new Date(orderData.created_at),
-        customerInfo,
-        estimatedTime
-      };
-
-      setOrders(prev => [newOrder, ...prev]);
-      setCart([]);
-      setCurrentOrder(newOrder);
-      setView('order-confirmation');
-    } catch (error) {
-      console.error('Error placing order:', error);
-      // Fallback to local storage if Supabase fails
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        items: [...cart],
-        total: cart.reduce((a, b) => a + (b.price * b.quantity), 0),
-        status: 'pending',
-        timestamp: new Date(),
-        customerInfo,
-        estimatedTime: cart.reduce((max, item) => Math.max(max, item.prepTime), 0) + 5
-      };
-      setOrders(prev => [newOrder, ...prev]);
-      setCart([]);
-      setCurrentOrder(newOrder);
-      setView('order-confirmation');
-    }
-  };
-    const updateOrderStatus = (id: string, status: Order['status']) => {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-        if (currentOrder && currentOrder.id === id) {
-            setCurrentOrder(prev => prev ? { ...prev, status } : null);
+        if (orderError) {
+            alert("Error placing order: " + orderError.message);
+            return;
         }
+
+        if (orderData) {
+            const itemsData = cart.map(item => ({
+                order_id: orderData.id,
+                item_name: item.name,
+                item_price: item.price,
+                quantity: item.quantity,
+                category: item.category,
+                is_veg: item.isVeg
+            }));
+
+            const { error: itemsError } = await supabase.from('order_items').insert(itemsData);
+            
+            if (itemsError) {
+                console.error("Error adding items", itemsError);
+            } else {
+                // Optimistic UI update or wait for subscription
+                const newOrder: Order = {
+                    id: orderData.id,
+                    items: [...cart],
+                    total: total,
+                    status: 'pending',
+                    timestamp: new Date(),
+                    customerInfo: customerInfo,
+                    estimatedTime
+                };
+                // setOrders(prev => [newOrder, ...prev]); // Subscription handles this
+                setCurrentOrder(newOrder);
+                setCart([]);
+                setView('order-confirmation');
+            }
+        }
+    };
+
+    const updateOrderStatus = async (id: string, status: Order['status']) => {
+        await supabase.from('orders').update({ status }).eq('id', id);
+        // Local state will update via subscription
     };
 
     const toggleStock = (id: string) => {
