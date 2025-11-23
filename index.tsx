@@ -569,13 +569,16 @@ const PlaceOrderModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClo
     const [phone, setPhone] = useState('');
     const [serviceType, setServiceType] = useState<ServiceType>('Dine-in');
     const [tableNumber, setTableNumber] = useState('');
+      const [specialRequests, setSpecialRequests] = useState('');
+        const [deliveryAddress, setDeliveryAddress] = useState('');
 
     if (!isOpen) return null;
 
     const handleSubmit = () => {
         if (!name || !phone) return alert('Please fill Name and Phone');
         if (serviceType === 'Dine-in' && !tableNumber) return alert('Please enter Table Number');
-        onSubmit({ name, phone, serviceType, tableNumber: serviceType === 'Dine-in' ? tableNumber : undefined });
+            if (serviceType === 'Delivery' && !deliveryAddress) return alert('Please enter Delivery Address');
+        onSubmit({ name, phone, serviceType, tableNumber: serviceType === 'Dine-in' ? tableNumber : undefined , specialRequests, deliveryAddress: serviceType === 'Delivery' ? deliveryAddress : undefined});
         onClose();
     };
 
@@ -590,6 +593,22 @@ const PlaceOrderModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClo
                     <input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white" />
                     <input type="tel" placeholder="Phone Number" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white" />
                     <div className="grid grid-cols-3 gap-2">
+                                    <textarea
+                                                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                                                                        rows={3}
+                                                                                          placeholder="Special Requests (e.g., less spicy, extra cheese, no onions)"
+                                                                                                            value={specialRequests}
+                                                                                                                              onChange={(e) => setSpecialRequests(e.target.value)}
+                                                                                                                                              />
+                                                                                                                                                              {serviceType === 'Delivery' && (
+                                                                                                                                                                                  <textarea
+                                                                                                                                                                                                      className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                                                                                                                                                                                                                          rows={2}
+                                                                                                                                                                                                                                              placeholder="Delivery Address *"
+                                                                                                                                                                                                                                                                  value={deliveryAddress}
+                                                                                                                                                                                                                                                                                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                                                                                                                                                                                                                                                                                                        />
+                                                                                                                                                                                                                                                                                                                        )}
                         {(['Dine-in', 'Takeaway', 'Delivery'] as ServiceType[]).map(type => (
                             <button key={type} onClick={() => setServiceType(type)} className={`p-2 rounded-lg text-sm font-medium border ${serviceType === type ? 'bg-cyan-500 text-black border-cyan-500' : 'bg-transparent text-gray-400 border-zinc-700'}`}>
                                 {type}
