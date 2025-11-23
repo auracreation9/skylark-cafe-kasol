@@ -56,10 +56,8 @@ import {
 
 // --- SUPABASE CONFIGURATION ---
 // REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
-const SUPABASE_URL = 'https://yqzelhilozltjlahbtsi.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxemVsaGlsb3psdGpsYWhidHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzkyODQsImV4cCI6MjA0ODQ1NTI4NH0.4J7ptQw2udURR7O6paB49x0cuG9RNyZQgrSbdVj_IVo';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxemVsaGlsb3psdGpsYWhidHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzkyODQsImV4cCI6MjA0ODQ1NTI4NH0.4J7ptQw2udURR7O6paB49x0cuG9RNyZQgrSbdVj_IVo';
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /*
   REQUIRED SQL SETUP FOR SUPABASE:
