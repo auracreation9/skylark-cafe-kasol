@@ -1299,8 +1299,12 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                                     </div>
                                                 </div>
                                             </div>
-                                                                          {order.special_requests && (
+                                                                          {order.special_requests &&((
                                                                                                             <div className="mt-2 pt-2 border-t border-zinc-700">
+                                                                                                                                            <div className="mt-2 pt-2 border-t border-zinc-700">
+                                                                                                                                                                              <p className="text-xs text-gray-400 font-bold">Special Requests:</p>
+                                                                                                                                                                                                                <p className="text-sm text-yellow-400">{order.special_requests}</p>
+                                                                                                                                                                                                                                                </div>
                                                                                                                                               <p className="text-xs text-gray-400 font-bold">Special Requests:</p>
                                                                                                                                                                                 <p className="text-sm text-yellow-400">{order.special_requests}</p>
                                                                                                                                                                                                                 </div>
