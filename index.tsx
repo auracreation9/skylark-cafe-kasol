@@ -1275,10 +1275,10 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                             </span>
                                             {order.customerInfo.tableNumber && <span className="text-xs px-2 py-0.5 rounded bg-zinc-700 text-white font-mono">Table {order.customerInfo.tableNumber}</span>}
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-1">{order.customerInfo.name} • {order.customerInfo.phone}</p>
-                                    </div>
+                                   </div>
                                     <span className="text-xs font-mono text-gray-500">{order.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                 </div>
+                                                                <p className="text-xs text-gray-400 mt-1"></p>
                                 <div className="space-y-2 mb-4">
                                     {order.items.map((item, idx) => {
                                         // Check for missing ingredients for this item
@@ -1299,6 +1299,12 @@ const KitchenView = React.memo(({ orders, menu, updateOrderStatus, updateStockSt
                                                     </div>
                                                 </div>
                                             </div>
+                                                                          {order.special_requests && (
+                                                                                                            <div className="mt-2 pt-2 border-t border-zinc-700">
+                                                                                                                                              <p className="text-xs text-gray-400 font-bold">Special Requests:</p>
+                                                                                                                                                                                <p className="text-sm text-yellow-400">{order.special_requests}</p>
+                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                              )}
                                         );
                                     })}
                                 </div>
