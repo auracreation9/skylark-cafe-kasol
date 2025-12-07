@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Info,
   Printer,
+    Phone,
   MapPin,
   DollarSign,
   Leaf,
@@ -506,7 +507,8 @@ const LoginView = ({ onLogin, onBack }: { onLogin: (type: 'kitchen' | 'admin', s
     const handleLogin = () => {
         if (id === 'skylarkcafe' && password === 'kitchen123') {
             onLogin('kitchen', rememberMe);
-        } else if (id === 'skylark' && password === 'sanskar321') {
+        } else if (id === 'skylark' && password === '969
+                   321') {
             onLogin('admin', rememberMe);
         } else {
             setError('Invalid Credentials');
@@ -966,7 +968,10 @@ const CustomerView = React.memo(({ menu, cart, onAddToCart, onUpdateCartQuantity
                     <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Skylark</span>
                 </div>
                 <div className="flex gap-2">
-                    <a href="https://maps.app.goo.gl/NUpz4bEUTTagFVUn9" target="_blank" rel="noreferrer" className="p-2 bg-white/5 rounded-full text-cyan-400 hover:bg-cyan-500/20 transition-colors border border-white/5">
+            <a href="tel:+918870554327" className="p-2 bg-white/5 rounded-full text-green-400 hover:bg-green-500/20 transition-colors border border-white/5">
+                            <Phone size={18} />
+                          </a>
+                  <a href="https://maps.app.goo.gl/NUpz4bEUTTagFVUn9" target="_blank" rel="noreferrer" className="p-2 bg-white/5 rounded-full text-cyan-400 hover:bg-cyan-500/20 transition-colors border border-white/5">
                         <MapPin size={18} />
                     </a>
                     <button onClick={() => onNavigate('kitchen')} className="p-2 bg-white/5 rounded-full text-orange-400 hover:bg-orange-500/20 transition-colors border border-white/5">
